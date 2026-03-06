@@ -1,0 +1,41 @@
+John Doe (Plaintiff)                 | UNITED STATES DISTRICT COURT, NORTHERN DISTRICT OF TEXAS, DALLAS DIVISION
+Jane Smith, Individually and on     | Case No. 3:22-md-03047-BN
+behalf of all others similarly      | Hon. Judge James N. Brown
+situated (Plaintiff)                 |
+------------------------------------|---------------------------------------------
+                                     | 
+MEMORANDUM OF LAW IN SUPPORT OF      |
+PLAINTIFFS' MOTION FOR CLASS         |
+CERTIFICATION AND FOR APPOINTMENT    |
+OF LEAD PLAINTIFF                    |
+
+E-FILED
+CLERK OF COURT
+February 14, 2023
+DISTRICT CLERK
+
+TABLE OF CONTENTS
+I. INTRODUCTION ............................... 1
+II. FACTUAL BACKGROUND ....................... 3
+III. ARGUMENT ........................................ 7
+   A. Class Certification is Warranted ........ 7
+   B. Plaintiffs are Adequate Representatives .. 11
+IV. CONCLUSION ...................................... 15
+
+TABLE OF AUTHORITIES
+Smith v. Jones, No. 19-cv-04821 (S.D.N.Y. Mar. 15, 2019) .... 5
+Roe v. Corp., 2021 U.S. Dist. LEXIS 84729 (C.D. Cal. Apr. 2, 2021) .. 8
+Watkins v. Texas, 951 F. Supp. 1319 (N.D. Tex. 1996) ....... 12
+
+Pursuant to Fed. R. Civ. P. 23, Plaintiffs John Doe and Jane Smith, individually and on behalf of all others similarly situated, respectfully submit this Memorandum of Law in support of their Motion for Class Certification and for Appointment of Lead Plaintiff. This action arises from Defendants' alleged violations of the Securities Exchange Act of 1934 and the rules promulgated thereunder, including Rule 10b-5. Plaintiffs assert that Defendants' actions were in violation of the Commerce Clause (Art. I, § 8, cl. 3) and the Supremacy Clause (Art. VI, cl. 2) of the United States Constitution.
+
+The Court should grant Plaintiffs' Motion for Class Certification because the proposed class meets the requirements of Rule 23(a) and (b)(3). The Plaintiffs have suffered a common injury due to Defendants' actions, and the class is so numerous that joinder is impracticable.
+
+Dated: February 14, 2023          Respectfully submitted,
+/s/ Emily J. Wilson
+Wilson Law Firm LLP
+123 Main Street
+Dallas, TX 75201
+Tel: (214) 123-4567
+Email: ewilson@wilsonlaw.com
+Counsel for Plaintiffs

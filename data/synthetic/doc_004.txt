@@ -1,0 +1,43 @@
+Here is the generated document:
+
+
+JOHN DOE (Plaintiff)                                         | UNITED STATES DISTRICT COURT, NORTHERN DISTRICT OF TEXAS, DALLAS DIVISION
+                                                             | Case No. 3:22-md-03047-BN
+------------------------------------------------------------|-------------------------------------------------------------
+ABC CORPORATION, XYZ INC. (Defendants)                    | Hon. James N. Brown
+
+
+MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS'
+MOTION TO DISMISS PLAINTIFF'S CLASS ACTION COMPLAINT
+AND STRIKE CLASS ALLEGATIONS
+
+
+E-FILED
+KAREN JONES, CLERK OF COURT
+February 27, 2023
+DISTRICT CLERK
+
+TABLE OF CONTENTS
+I. INTRODUCTION ................................................ 1
+II. FACTUAL BACKGROUND ...................................... 3
+III. ARGUMENT .................................................... 7
+  A. Plaintiff Fails to State a Claim ....................... 7
+  B. The Class Allegations Must Be Stricken ................... 11
+TABLE OF AUTHORITIES
+Smith v. Jones, No. 19-cv-04821 (N.D. Tex. Jan. 10, 2020) .... 5
+Roe v. Corp., 2020 U.S. Dist. LEXIS 84729 (N.D. Cal. May 2, 2020) .. 8
+
+Pursuant to Fed. R. Civ. P. 12(b)(6), Defendants move to dismiss Plaintiff's Class Action Complaint. Plaintiff alleges violations of the Fourth Amendment and the Commerce Clause (Art. I, § 8, cl. 3). However, Plaintiff fails to state a claim upon which relief can be granted.
+
+The Fourth Amendment protects against unreasonable searches and seizures. U.S. Const. amend. IV. Here, Plaintiff's allegations do not rise to the level of a constitutional violation.
+
+WHEREFORE, Defendants respectfully request that the Court grant their Motion to Dismiss.
+
+Dated: February 27, 2023          Respectfully submitted,
+/s/ Jane Smith
+JONES LAW FIRM LLP
+123 Main St.
+Dallas, TX 75201
+Tel: (214) 123-4567
+Email: jsmith@joneslaw.com
+Counsel for Defendants

@@ -1,0 +1,40 @@
+Here is a generated document:
+
+
+--------------------------------------------------------
+| John Doe (Plaintiff)                                 | UNITED STATES DISTRICT COURT, NORTHERN DISTRICT OF TEXAS, DALLAS DIVISION
+| v.                                                   | Case No. 3:22-md-03047-BN
+| XYZ Corporation (Defendant), Jane Smith (Defendant) | 
+--------------------------------------------------------
+
+MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO STAY
+AND RESPONSE TO PLAINTIFF'S MOTION FOR SUMMARY JUDGMENT
+
+TABLE OF CONTENTS
+
+I. INTRODUCTION ....................................................... 1
+II. ARGUMENT ....................................................... 3
+    A. Legal Standard ............................................... 3
+    B. Application to this Case .................................... 5
+III. CONCLUSION ....................................................... 8
+
+TABLE OF AUTHORITIES
+
+Smith v. Jones, 123 F. Supp. 3d 456 (N.D. Tex. Feb. 15, 2018) .... 5
+Roe v. Corp., No. 19-cv-04821 (S.D.N.Y. Mar. 15, 2019) ............ 7
+
+Pursuant to Fed. R. Civ. P 12(b)(6), Defendants XYZ Corporation and Jane Smith respectfully submit this Memorandum of Law in support of their Motion to Stay and in response to Plaintiff John Doe's Motion for Summary Judgment. Defendants argue that the Court should stay the proceedings pending the outcome of a related case, which will have a significant impact on the issues presented here. Furthermore, Defendants contend that Plaintiff's claims are barred by the statute of limitations and fail to state a claim upon which relief can be granted.
+
+The Fourth Amendment protects against unreasonable searches and seizures. In this case, Plaintiff alleges that Defendants conducted an unlawful search of his property. However, Defendants argue that the search was lawful and did not violate Plaintiff's constitutional rights.
+
+...
+
+Dated: September 28, 2023          Respectfully submitted,
+/s/ Jane Lawyer
+JANE LAWYER, ESQ.
+LAW FIRM LLP
+123 Main St.
+Dallas, TX 75201
+Tel: (214) 123-4567
+Email: jlawyer@lawfirm.com
+Counsel for Defendants

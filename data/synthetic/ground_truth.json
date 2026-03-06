@@ -1,0 +1,126 @@
+[
+  {
+    "title": "MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO DISMISS PLAINTIFFS' CLASS ACTION COMPLAINT FOR VIOLATIONS OF SECURITIES LAW AND FOR BREACH OF FIDUCIARY DUTY",
+    "document_types": [
+      "Memorandum of Law"
+    ],
+    "nuid": "4:22-MD-03047-YGR",
+    "court_name": "UNITED STATES DISTRICT COURT",
+    "court_location": "Northern District of California",
+    "judge_name": "Yvonne Gonzalez Rogers",
+    "filing_date": "2023-09-28",
+    "parties": {
+      "plaintiffs": [
+        "John Smith",
+        "Jane Doe, individually and on behalf of all others similarly situated"
+      ],
+      "defendants": [
+        "XYZ Corporation",
+        "ABC Inc.",
+        "DEF LLC"
+      ]
+    },
+    "clauses": [
+      "First Amendment"
+    ],
+    "file_path": "/home/ishaan/work/docTypeID/data/synthetic/doc_001.txt"
+  },
+  {
+    "title": "MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO STAY PENDING INTERLOCUTORY APPEAL AND FOR STAY OF DISCOVERY",
+    "document_types": [
+      "Memorandum of Law"
+    ],
+    "nuid": "3:22-CV-03047-LHD",
+    "court_name": "UNITED STATES DISTRICT COURT",
+    "court_location": "Northern District of Texas, Dallas Division",
+    "judge_name": "Lynn H. Doughty",
+    "filing_date": "2023-09-28",
+    "parties": {
+      "plaintiffs": [
+        "Jane Doe"
+      ],
+      "defendants": [
+        "XYZ Inc.",
+        "ABC LLC",
+        "PQR Corp."
+      ]
+    },
+    "clauses": [
+      "Fifth Amendment Due Process Clause"
+    ],
+    "file_path": "/home/ishaan/work/docTypeID/data/synthetic/doc_002.txt"
+  },
+  {
+    "title": "MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO STAY AND RESPONSE TO PLAINTIFF'S MOTION FOR SUMMARY JUDGMENT",
+    "document_types": [
+      "Memorandum of Law",
+      "Response"
+    ],
+    "nuid": "3:22-MD-03047-BN",
+    "court_name": "UNITED STATES DISTRICT COURT",
+    "court_location": "Northern District of Texas, Dallas Division",
+    "judge_name": "B. Nuez",
+    "filing_date": "2023-09-28",
+    "parties": {
+      "plaintiffs": [
+        "John Doe"
+      ],
+      "defendants": [
+        "XYZ Corporation",
+        "Jane Smith"
+      ]
+    },
+    "clauses": [
+      "Fourth Amendment"
+    ],
+    "file_path": "/home/ishaan/work/docTypeID/data/synthetic/doc_003.txt"
+  },
+  {
+    "title": "MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO DISMISS PLAINTIFF'S CLASS ACTION COMPLAINT AND STRIKE CLASS ALLEGATIONS",
+    "document_types": [
+      "Memorandum of Law"
+    ],
+    "nuid": "3:22-MD-03047-BN",
+    "court_name": "UNITED STATES DISTRICT COURT",
+    "court_location": "Northern District of Texas, Dallas Division",
+    "judge_name": "James N. Brown",
+    "filing_date": "2023-02-27",
+    "parties": {
+      "plaintiffs": [
+        "John Doe"
+      ],
+      "defendants": [
+        "ABC Corporation",
+        "XYZ Inc."
+      ]
+    },
+    "clauses": [
+      "Fourth Amendment",
+      "Commerce Clause"
+    ],
+    "file_path": "/home/ishaan/work/docTypeID/data/synthetic/doc_004.txt"
+  },
+  {
+    "title": "MEMORANDUM OF LAW IN SUPPORT OF PLAINTIFFS' MOTION FOR CLASS CERTIFICATION AND FOR APPOINTMENT OF LEAD PLAINTIFF",
+    "document_types": [
+      "Memorandum of Law"
+    ],
+    "nuid": "3:22-MD-03047-BN",
+    "court_name": "UNITED STATES DISTRICT COURT",
+    "court_location": "Northern District of Texas, Dallas Division",
+    "judge_name": "James N. Brown",
+    "filing_date": "2023-02-14",
+    "parties": {
+      "plaintiffs": [
+        "John Doe",
+        "Jane Smith, Individually and on behalf of all others similarly situated"
+      ],
+      "defendants": []
+    },
+    "clauses": [
+      "Commerce Clause",
+      "Supremacy Clause"
+    ],
+    "file_path": "/home/ishaan/work/docTypeID/data/synthetic/doc_005.txt"
+  }
+]

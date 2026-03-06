@@ -1,0 +1,29 @@
+| Jane Doe (Plaintiff) v. XYZ Inc., ABC LLC, and PQR Corp. (Defendants) | UNITED STATES DISTRICT COURT, NORTHERN DISTRICT OF TEXAS, DALLAS DIVISION | 
+| --- | Case No. 3:22-cv-03047-LHD |
+
+MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO STAY
+PENDING INTERLOCUTORY APPEAL AND FOR STAY OF DISCOVERY
+
+TABLE OF CONTENTS
+I. INTRODUCTION ...................................... 1
+II. ARGUMENT ........................................... 3
+   A. Legal Standard for Stay Pending Appeal ............ 3
+   B. Application to this Case ............................ 5
+III. CONCLUSION ........................................... 8
+
+TABLE OF AUTHORITIES
+Landis v. North American Co., 299 U.S. 248 (1936) ............... 4
+S.E.C. v. Stanford Int'l Bank, Ltd., No. 3:09-cv-00298 (N.D. Tex. Feb. 12, 2010) ... 6
+
+Pursuant to Fed. R. Civ. P. 62(c), Defendants XYZ Inc., ABC LLC, and PQR Corp. respectfully submit this Memorandum of Law in support of their Motion to Stay Pending Interlocutory Appeal and for Stay of Discovery. The Court should grant a stay because Defendants have raised serious questions on the merits and a stay is necessary to prevent undue prejudice. The Fifth Amendment Due Process Clause and the principles of Landis v. North American Co., 299 U.S. 248 (1936), support this Court's authority to grant a stay.
+
+The instant motion is made in good faith and is not intended to delay the proceedings unduly. Defendants have conferred with Plaintiff, who opposes this motion.
+
+Dated: September 28, 2023          Respectfully submitted,
+/s/ Rachel K. Lee
+LEE & ASSOCIATES LLP
+123 Main Street, Suite 400
+Dallas, TX 75201
+Tel: (214) 123-4567
+Email: rlee@leeassociates.com
+Counsel for Defendants XYZ Inc., ABC LLC, and PQR Corp.

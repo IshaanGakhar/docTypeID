@@ -1,0 +1,42 @@
+MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO DISMISS
+PLAINTIFFS' CLASS ACTION COMPLAINT FOR VIOLATIONS OF SECURITIES LAW AND
+FOR BREACH OF FIDUCIARY DUTY
+
+| John Smith (Plaintiff), Jane Doe, individually and on behalf of all others similarly situated (Plaintiff) | UNITED STATES DISTRICT COURT, NORTHERN DISTRICT OF CALIFORNIA |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| v.                                       | Case No. 4:22-md-03047-YGR                                    |
+| XYZ Corporation (Defendant), ABC Inc.   | Honorable Yvonne Gonzalez Rogers                             |
+| (Defendant), DEF LLC (Defendant)         |                                                              |
+
+E-FILED
+JENNY LAW
+March 15, 2023
+DISTRICT CLERK
+
+MEMORANDUM OF LAW IN SUPPORT OF DEFENDANTS' MOTION TO DISMISS
+PLAINTIFFS' CLASS ACTION COMPLAINT FOR VIOLATIONS OF SECURITIES LAW AND
+FOR BREACH OF FIDUCIARY DUTY
+
+TABLE OF CONTENTS
+I. FACTUAL BACKGROUND ............................................... 3
+II. ARGUMENT ....................................................... 7
+    A. Plaintiffs Fail to State a Claim Under Rule 12(b)(6) ........ 7
+    B. Defendants' Conduct is Protected by the First Amendment ... 10
+III. CONCLUSION ...................................................... 12
+
+TABLE OF AUTHORITIES
+Smith v. Jones, No. 19-cv-04821 (S.D.N.Y. Mar. 15, 2019) ............... 5
+Roe v. Corp., 2021 U.S. Dist. LEXIS 84729 (C.D. Cal. Apr. 2, 2021) ... 8
+Johnson v. Doe, 2018 WL 2027256 (N.D. Cal. May 2, 2018) ............ 9
+
+Pursuant to Fed. R. Civ. P. 12(b)(6), Defendants move to dismiss Plaintiffs' Class Action Complaint for violations of securities law and for breach of fiduciary duty. Plaintiffs' claims are barred by the statute of limitations and fail to state a claim upon which relief can be granted. The Complaint alleges that Defendants made false and misleading statements regarding their financial condition, which is a violation of Section 10(b) of the Securities Exchange Act of 1934 and Rule 10b-5 promulgated thereunder. 15 U.S.C. § 78j(b). Furthermore, Defendants' conduct is protected by the First Amendment, which prohibits Congress from abridging the freedom of speech. U.S. Const. amend. I.
+
+Dated: September 28, 2023          Respectfully submitted,
+/s/ Rachel Lee
+RACHEL LEE
+LEE & ASSOCIATES LLP
+123 Main Street
+San Francisco, CA 94105
+Tel: (415) 123-4567
+Email: rachel.lee@leeassociates.com
+Counsel for Defendants
