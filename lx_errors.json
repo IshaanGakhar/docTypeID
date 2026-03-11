@@ -1,0 +1,22 @@
+[
+  {
+    "file": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/001 - MGNX - LP Packet CC Cover Ltr.docx",
+    "error": "InferenceRuntimeError: Parallel inference error: cannot import name 'core_types' from 'langextract.providers' (/home/ishaan/work/docTypeID/.venv/lib/python3.12/site-packages/langextract/providers/__init__.py)"
+  },
+  {
+    "file": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/001 - MGNX - LP Packet CC Cover Ltr.pdf",
+    "error": "InferenceRuntimeError: Parallel inference error: cannot import name 'core_types' from 'langextract.providers' (/home/ishaan/work/docTypeID/.venv/lib/python3.12/site-packages/langextract/providers/__init__.py)"
+  },
+  {
+    "file": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/003 - MGNX - LP Motion (filed).pdf",
+    "error": "InferenceRuntimeError: Parallel inference error: cannot import name 'core_types' from 'langextract.providers' (/home/ishaan/work/docTypeID/.venv/lib/python3.12/site-packages/langextract/providers/__init__.py)"
+  },
+  {
+    "file": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/004 - MGNX - LP MOL (filed).pdf",
+    "error": "InferenceRuntimeError: Parallel inference error: cannot import name 'core_types' from 'langextract.providers' (/home/ishaan/work/docTypeID/.venv/lib/python3.12/site-packages/langextract/providers/__init__.py)"
+  },
+  {
+    "file": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/005 - MGNX - LP Proposed Order (filed).pdf",
+    "error": "InferenceRuntimeError: Parallel inference error: cannot import name 'core_types' from 'langextract.providers' (/home/ishaan/work/docTypeID/.venv/lib/python3.12/site-packages/langextract/providers/__init__.py)"
+  }
+]

@@ -31,7 +31,7 @@ from typing import Iterator, Union
 from pipeline.config import MIN_CHARS, DOCTYPE_THRESHOLD
 from pipeline.pdf_loader import load_document, LoadedDocument, SUPPORTED_EXTENSIONS
 from pipeline.preprocess import preprocess, DocumentZones, lines_to_text
-from pipeline.title_extractor import extract_title, TitleResult
+from pipeline.title_extractor import extract_title, TitleResult, demote_party_title
 from pipeline.doc_type_classifier import classify_document_type
 from pipeline.uid_extractor import extract_nuid
 from pipeline.court_judge_extractor import extract_court_and_judge
@@ -44,6 +44,13 @@ from pipeline.crf_ner import extract_entities_crf
 # ---------------------------------------------------------------------------
 # Output normalization
 # ---------------------------------------------------------------------------
+
+def _strip_evidence(result: dict) -> dict:
+    """Remove 'evidence' and 'confidence' keys from a result dict."""
+    result.pop("evidence", None)
+    result.pop("confidence", None)
+    return result
+
 
 def _clean_str(val: object) -> object:
     """
@@ -63,6 +70,136 @@ def _deep_clean(obj: object) -> object:
     if isinstance(obj, list):
         return [_deep_clean(item) for item in obj]
     return _clean_str(obj)
+
+
+# ---------------------------------------------------------------------------
+# Marked-docs PDF generation  (annotates the original PDF with highlights)
+# ---------------------------------------------------------------------------
+
+# field → (R, G, B) in 0-1 range for PyMuPDF annotations
+_FIELD_COLORS_RGB: dict[str, tuple[float, float, float]] = {
+    "title":          (1.0, 0.84, 0.0),     # gold
+    "document_types": (0.53, 0.81, 0.92),    # sky blue
+    "nuid":           (0.60, 0.98, 0.60),    # pale green
+    "court_name":     (0.87, 0.63, 0.87),    # plum
+    "court_location": (0.94, 0.63, 0.63),    # salmon
+    "judge_name":     (1.0, 0.63, 0.48),     # light salmon
+    "filing_date":    (0.56, 0.93, 0.56),    # light green
+    "parties":        (1.0, 0.71, 0.76),     # pink
+    "clauses":        (1.0, 0.39, 0.28),     # tomato
+}
+
+_FIELD_LABELS: dict[str, str] = {
+    "title": "Title", "document_types": "DocType", "nuid": "NUID",
+    "court_name": "Court", "court_location": "Location",
+    "judge_name": "Judge", "filing_date": "Date",
+    "parties": "Party", "clauses": "Clause",
+}
+
+
+def _annotate_pdf(result: dict, src_path: str, out_path: Path) -> bool:
+    """
+    Open the original PDF, add colored highlight annotations for every
+    evidence span, and save an annotated copy.  Returns True on success.
+    """
+    import fitz
+
+    evidence_map: dict[str, list[dict]] = result.get("evidence", {})
+    if not evidence_map:
+        return False
+
+    try:
+        doc = fitz.open(src_path)
+    except Exception:
+        return False
+
+    n_pages = len(doc)
+    highlights_added = 0
+
+    for field, ev_list in evidence_map.items():
+        color = _FIELD_COLORS_RGB.get(field, (0.8, 0.8, 0.8))
+        label = _FIELD_LABELS.get(field, field)
+
+        for ev in ev_list:
+            span_text = ev.get("span_text", "").strip()
+            page_num = ev.get("page", 1)
+            if not span_text or page_num < 1 or page_num > n_pages:
+                continue
+
+            page = doc[page_num - 1]
+
+            # Search for the span text on the page; try progressively
+            # shorter prefixes if the full text isn't found (text can
+            # differ slightly between extraction and PDF rendering).
+            quads = page.search_for(span_text, quads=True)
+            if not quads and len(span_text) > 40:
+                quads = page.search_for(span_text[:40], quads=True)
+            if not quads and len(span_text) > 20:
+                quads = page.search_for(span_text[:20], quads=True)
+
+            if not quads:
+                continue
+
+            annot = page.add_highlight_annot(quads)
+            annot.set_colors(stroke=color)
+            annot.set_opacity(0.45)
+            info = annot.info
+            info["content"] = f"[{label}] {span_text[:120]}"
+            info["title"] = label
+            annot.set_info(info)
+            annot.update()
+            highlights_added += 1
+
+    if highlights_added == 0:
+        doc.close()
+        return False
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(str(out_path), garbage=3, deflate=True)
+    doc.close()
+    return True
+
+
+def generate_marked_docs(results: list[dict], n: int, out_dir: Path) -> None:
+    """
+    Pick *n* random non-skipped PDF results that have clauses and generate
+    annotated PDF copies with highlight annotations.
+    """
+    import random
+
+    candidates = [
+        r for r in results
+        if not r.get("skipped")
+        and r.get("clauses")                         # non-empty clauses
+        and str(r.get("file_path", "")).lower().endswith(".pdf")
+    ]
+
+    if not candidates:
+        print("No PDF documents with clauses to mark.", file=sys.stderr)
+        return
+
+    random.shuffle(candidates)
+    selected = candidates[:n]
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    print(
+        f"\nAnnotating {len(selected)} PDFs (from {len(candidates)} with clauses) "
+        f"→ {out_dir}/",
+        file=sys.stderr,
+    )
+
+    generated = 0
+    for i, result in enumerate(selected):
+        file_path = result.get("file_path", "")
+        safe_name = Path(file_path).stem[:60].replace(" ", "_")
+        pdf_path = out_dir / f"{i + 1:02d}_{safe_name}.pdf"
+
+        ok = _annotate_pdf(result, file_path, pdf_path)
+        status = "OK" if ok else "SKIP (no highlights matched)"
+        generated += int(ok)
+        print(f"  [{i + 1}/{len(selected)}] [{status}] {pdf_path.name}", file=sys.stderr)
+
+    print(f"  Done: {generated} annotated PDFs saved.", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +320,11 @@ def run_pipeline(
 
     # Step 9 — Parties
     party_result = extract_parties(zones)
+
+    # Step 9b — Demote party-as-title: if the title is just a party name, nullify it
+    if title and demote_party_title(title, party_result.parties):
+        title = None
+        title_result = TitleResult(title=None, confidence=0.0, evidence=[])
 
     # Step 10 — Clauses
     clause_result = extract_clauses(zones)
@@ -337,6 +479,12 @@ def run_pipeline_dir(
             file=sys.stderr,
         )
 
+    try:
+        from tqdm import tqdm
+        _has_tqdm = True
+    except ImportError:
+        _has_tqdm = False
+
     task_args = [(str(f), min_chars, doctype_threshold) for f in files]
     results: list[dict] = [{}] * total
 
@@ -346,20 +494,26 @@ def run_pipeline_dir(
                 pool.submit(_process_file, arg): i
                 for i, arg in enumerate(task_args)
             }
-            done = 0
-            for future in as_completed(future_to_idx):
+            iterator = as_completed(future_to_idx)
+            if progress and _has_tqdm:
+                iterator = tqdm(iterator, total=total, desc="Extracting",
+                                unit="doc", file=sys.stderr)
+            for future in iterator:
                 idx = future_to_idx[future]
                 results[idx] = future.result()
-                done += 1
-                if progress:
-                    print(
-                        f"  [{done}/{total}] {files[idx].name}",
-                        file=sys.stderr,
-                    )
     else:
-        for i, arg in enumerate(task_args):
+        iterator = enumerate(task_args)
+        if progress and _has_tqdm:
+            iterator = tqdm(iterator, total=total, desc="Extracting",
+                            unit="doc", file=sys.stderr)
+        for i, arg in iterator:
             results[i] = _process_file(arg)
-            if progress:
+            if progress and _has_tqdm:
+                status = "SKIP" if results[i].get("skipped") else "OK"
+                iterator.set_postfix_str(
+                    f"[{status}] {files[i].name[-40:]}", refresh=True,
+                )
+            elif progress:
                 status = "SKIP" if results[i].get("skipped") else "OK"
                 print(
                     f"  [{i + 1}/{total}] [{status}] {files[i].name}",
@@ -437,6 +591,19 @@ def main() -> None:
         "--quiet", "-q", action="store_true",
         help="Suppress progress output",
     )
+    parser.add_argument(
+        "--no-evidence", dest="include_evidence", action="store_false",
+        default=True,
+        help="Omit 'evidence' and 'confidence' keys from output (smaller JSON)",
+    )
+    parser.add_argument(
+        "--mark-docs", type=int, default=0, metavar="N",
+        help=(
+            "Generate highlighted HTML files for N documents showing where "
+            "each metadata field was extracted from.  Creates a marked_docs/ "
+            "directory with one HTML per document."
+        ),
+    )
 
     # ── Folder-mode options ─────────────────────────────────────────────────
     parser.add_argument(
@@ -500,6 +667,21 @@ def main() -> None:
             output_path=args.output,
             progress=not args.quiet,
         )
+
+    # Generate marked docs (before stripping evidence)
+    if args.mark_docs > 0:
+        mark_dir = Path(args.output).parent / "marked_docs" if args.output else Path("marked_docs")
+        generate_marked_docs(results, args.mark_docs, mark_dir)
+
+    # Strip evidence if requested
+    if not args.include_evidence:
+        results = [_strip_evidence(r) for r in results]
+
+    # If --output was given, re-write the file without evidence
+    if args.output and not args.include_evidence:
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump([_deep_clean(r) for r in results], f,
+                      ensure_ascii=False, indent=2)
 
     # Stream JSONL to stdout if no --output
     if not args.output:

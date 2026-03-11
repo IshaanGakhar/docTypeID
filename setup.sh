@@ -173,8 +173,11 @@ ${BOLD}C) LoRA Fine-tuning  (scripts/train_lora.py)${RESET}
   # Edit DOC_DIR and LABELS_JSON at the top of the script first, then:
   ${CYAN}python scripts/train_lora.py${RESET}
 
-  # Run inference with the trained adapter:
+  # Run inference on a single document:
   ${CYAN}python scripts/train_lora.py --infer /path/to/doc.pdf${RESET}
+
+  # Run inference on a whole folder (saves to gemma3-270m-lora-adapter/inference_results.json):
+  ${CYAN}python scripts/train_lora.py --infer-folder /path/to/docs/${RESET}
 
   # Inspect adapted layers:
   ${CYAN}python scripts/train_lora.py --inspect-layers${RESET}

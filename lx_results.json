@@ -1,0 +1,1358 @@
+[
+  {
+    "file_path": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/001 - MGNX - LP Packet CC Cover Ltr.docx",
+    "title": "Notice of Electronic Filing",
+    "document_types": [
+      "Notice",
+      "Notice",
+      "Memorandum of Law",
+      "Order",
+      "Declaration",
+      "Letter"
+    ],
+    "nuid": "8:24-cv-02184-ABA",
+    "court_name": "United States District Court, District of Maryland",
+    "court_location": "District of Maryland",
+    "judge_name": "Adam B. Abelson",
+    "filing_date": "2024-09-24",
+    "parties": {
+      "plaintiffs": [
+        "Crain",
+        "Ron Bassman"
+      ],
+      "defendants": [
+        "MacroGenics, Inc."
+      ]
+    },
+    "clauses": [],
+    "lx_raw_extractions": [
+      {
+        "class": "title",
+        "text": "Notice of Electronic Filing",
+        "attributes": {},
+        "char_start": 485,
+        "char_end": 512
+      },
+      {
+        "class": "document_type",
+        "text": "Notice",
+        "attributes": {},
+        "char_start": 485,
+        "char_end": 491
+      },
+      {
+        "class": "title",
+        "text": "Notice of Motion of Ron Bassman for Appointment as Lead Plaintiff and Approval of Selection of Counsel",
+        "attributes": {},
+        "char_start": 514,
+        "char_end": 616
+      },
+      {
+        "class": "document_type",
+        "text": "Notice",
+        "attributes": {
+          "subtype": "Motion"
+        },
+        "char_start": 485,
+        "char_end": 491
+      },
+      {
+        "class": "title",
+        "text": "Memorandum of Law in Support of the Motion of Ron Bassman for Appointment as Lead Plaintiff and Approval of Selection of Counsel",
+        "attributes": {},
+        "char_start": 630,
+        "char_end": 758
+      },
+      {
+        "class": "document_type",
+        "text": "Memorandum of Law",
+        "attributes": {},
+        "char_start": 630,
+        "char_end": 647
+      },
+      {
+        "class": "title",
+        "text": "[Proposed] Order Granting the Motion of Ron Bassman for Appointment as Lead Plaintiff and Approval of Selection of Counsel",
+        "attributes": {},
+        "char_start": 774,
+        "char_end": 896
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {
+          "subtype": "Proposed"
+        },
+        "char_start": 785,
+        "char_end": 790
+      },
+      {
+        "class": "title",
+        "text": "Declaration of Jordan A.",
+        "attributes": {},
+        "char_start": 912,
+        "char_end": 936
+      },
+      {
+        "class": "document_type",
+        "text": "Declaration",
+        "attributes": {},
+        "char_start": 912,
+        "char_end": 923
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 199,
+        "char_end": 216
+      },
+      {
+        "class": "court_name",
+        "text": "United States District Court, District of Maryland",
+        "attributes": {}
+      },
+      {
+        "class": "court_location",
+        "text": "District of Maryland",
+        "attributes": {},
+        "char_start": 70,
+        "char_end": 90
+      },
+      {
+        "class": "judge_name",
+        "text": "Adam B. Abelson",
+        "attributes": {},
+        "char_start": 48,
+        "char_end": 63
+      },
+      {
+        "class": "filing_date",
+        "text": "September 24, 2024",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 464,
+        "char_end": 482
+      },
+      {
+        "class": "plaintiff",
+        "text": "Crain",
+        "attributes": {},
+        "char_start": 154,
+        "char_end": 159
+      },
+      {
+        "class": "plaintiff",
+        "text": "Ron Bassman",
+        "attributes": {},
+        "char_start": 284,
+        "char_end": 295
+      },
+      {
+        "class": "defendant",
+        "text": "MacroGenics, Inc.",
+        "attributes": {},
+        "char_start": 163,
+        "char_end": 180
+      },
+      {
+        "class": "document_type",
+        "text": "Letter",
+        "attributes": {}
+      },
+      {
+        "class": "court_name",
+        "text": "United States District Court, District of Maryland",
+        "attributes": {}
+      },
+      {
+        "class": "filing_date",
+        "text": "September 25, 2024",
+        "attributes": {
+          "iso": "2024-09-25"
+        },
+        "char_start": 0,
+        "char_end": 18
+      }
+    ]
+  },
+  {
+    "file_path": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/001 - MGNX - LP Packet CC Cover Ltr.pdf",
+    "title": "Notice of Electronic Filing",
+    "document_types": [
+      "Letter",
+      "Notice",
+      "Notice",
+      "Memorandum of Law",
+      "Order",
+      "Motion",
+      "Declaration",
+      "Exhibit",
+      "Letter"
+    ],
+    "nuid": "8:24-cv-02184-ABA",
+    "court_name": "United States District Court, District of Maryland",
+    "court_location": "District of Maryland",
+    "judge_name": "Adam B. Abelson",
+    "filing_date": "2024-09-25",
+    "parties": {
+      "plaintiffs": [
+        "Crain",
+        "Ron Bassman"
+      ],
+      "defendants": [
+        "MacroGenics, Inc."
+      ]
+    },
+    "clauses": [],
+    "lx_raw_extractions": [
+      {
+        "class": "court_name",
+        "text": "United States District Court, District of Maryland",
+        "attributes": {}
+      },
+      {
+        "class": "court_location",
+        "text": "District of Maryland",
+        "attributes": {},
+        "char_start": 250,
+        "char_end": 270
+      },
+      {
+        "class": "judge_name",
+        "text": "Adam B. Abelson",
+        "attributes": {},
+        "char_start": 227,
+        "char_end": 242
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 387,
+        "char_end": 404
+      },
+      {
+        "class": "plaintiff",
+        "text": "Crain",
+        "attributes": {},
+        "char_start": 341,
+        "char_end": 346
+      },
+      {
+        "class": "plaintiff",
+        "text": "Ron Bassman",
+        "attributes": {},
+        "char_start": 476,
+        "char_end": 487
+      },
+      {
+        "class": "defendant",
+        "text": "MacroGenics, Inc.",
+        "attributes": {},
+        "char_start": 350,
+        "char_end": 367
+      },
+      {
+        "class": "document_type",
+        "text": "Letter",
+        "attributes": {}
+      },
+      {
+        "class": "filing_date",
+        "text": "September 25, 2024",
+        "attributes": {
+          "iso": "2024-09-25"
+        },
+        "char_start": 176,
+        "char_end": 194
+      },
+      {
+        "class": "title",
+        "text": "Notice of Electronic Filing",
+        "attributes": {},
+        "char_start": 682,
+        "char_end": 709
+      },
+      {
+        "class": "document_type",
+        "text": "Notice",
+        "attributes": {
+          "subtype": "Electronic Filing"
+        },
+        "char_start": 682,
+        "char_end": 688
+      },
+      {
+        "class": "filing_date",
+        "text": "September 24, 2024",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 658,
+        "char_end": 676
+      },
+      {
+        "class": "title",
+        "text": "Notice of Motion of Ron Bassman for Appointment as Lead Plaintiff and Approval of Selection of Counsel",
+        "attributes": {},
+        "char_start": 714,
+        "char_end": 817
+      },
+      {
+        "class": "document_type",
+        "text": "Notice",
+        "attributes": {
+          "subtype": "Motion"
+        },
+        "char_start": 682,
+        "char_end": 688
+      },
+      {
+        "class": "title",
+        "text": "Memorandum of Law in Support of the Motion of Ron Bassman for Appointment as Lead Plaintiff and Approval of Selection of Counsel",
+        "attributes": {},
+        "char_start": 834,
+        "char_end": 963
+      },
+      {
+        "class": "document_type",
+        "text": "Memorandum of Law",
+        "attributes": {},
+        "char_start": 834,
+        "char_end": 851
+      },
+      {
+        "class": "title",
+        "text": "[Proposed] Order Granting the Motion of Ron Bassman for Appointment as Lead Plaintiff and Approval of Selection of Counsel",
+        "attributes": {},
+        "char_start": 982,
+        "char_end": 1105
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {
+          "subtype": "Proposed"
+        },
+        "char_start": 993,
+        "char_end": 998
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {},
+        "char_start": 1012,
+        "char_end": 1018
+      },
+      {
+        "class": "nuid",
+        "text": "15-2",
+        "attributes": {},
+        "char_start": 1115,
+        "char_end": 1119
+      },
+      {
+        "class": "plaintiff",
+        "text": "Ron Bassman",
+        "attributes": {},
+        "char_start": 1022,
+        "char_end": 1033
+      },
+      {
+        "class": "title",
+        "text": "Declaration of Jordan A. Cafritz in Support of Ron Bassman’s Motion for Appointment as Lead Plaintiff and Approval of Selection of Counsel",
+        "attributes": {},
+        "char_start": 1124,
+        "char_end": 1263
+      },
+      {
+        "class": "document_type",
+        "text": "Declaration",
+        "attributes": {},
+        "char_start": 1124,
+        "char_end": 1135
+      },
+      {
+        "class": "nuid",
+        "text": "15-3",
+        "attributes": {},
+        "char_start": 1273,
+        "char_end": 1277
+      },
+      {
+        "class": "plaintiff",
+        "text": "Ron Bassman",
+        "attributes": {},
+        "char_start": 1022,
+        "char_end": 1033
+      },
+      {
+        "class": "title",
+        "text": "Exhibits A-E in Support of the Declaration of Jordan A. Cafritz",
+        "attributes": {},
+        "char_start": 1286,
+        "char_end": 1349
+      },
+      {
+        "class": "document_type",
+        "text": "Exhibit",
+        "attributes": {},
+        "char_start": 1286,
+        "char_end": 1294
+      },
+      {
+        "class": "nuid",
+        "text": "15-4 – 15-8",
+        "attributes": {},
+        "char_start": 1360,
+        "char_end": 1372
+      },
+      {
+        "class": "document_type",
+        "text": "Letter",
+        "attributes": {}
+      },
+      {
+        "class": "court_name",
+        "text": "United States District Court, District of Maryland",
+        "attributes": {}
+      }
+    ]
+  },
+  {
+    "file_path": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/003 - MGNX - LP Motion (filed).pdf",
+    "title": "NOTICE OF MOTION OF RON BASSMAN FOR APPOINTMENT AS LEAD PLAINTIFF AND APPROVAL OF SELECTION OF COUNSEL",
+    "document_types": [
+      "Notice of Motion",
+      "Motion",
+      "Certificate of Service"
+    ],
+    "nuid": "8:24-cv-02184-ABA",
+    "court_name": "UNITED STATES DISTRICT COURT DISTRICT OF MARYLAND",
+    "court_location": "District of Maryland",
+    "judge_name": "Adam B. Abelson",
+    "filing_date": "2024-09-24",
+    "parties": {
+      "plaintiffs": [
+        "DEREK CRAIN",
+        "Ron Bassman"
+      ],
+      "defendants": [
+        "MACROGENICS, INC.",
+        "SCOTT KOENIG"
+      ]
+    },
+    "clauses": [],
+    "lx_raw_extractions": [
+      {
+        "class": "title",
+        "text": "NOTICE OF MOTION OF RON BASSMAN FOR APPOINTMENT AS LEAD PLAINTIFF AND APPROVAL OF SELECTION OF COUNSEL",
+        "attributes": {},
+        "char_start": 258,
+        "char_end": 361
+      },
+      {
+        "class": "document_type",
+        "text": "Notice of Motion",
+        "attributes": {
+          "subtype": "Motion"
+        },
+        "char_start": 258,
+        "char_end": 274
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 215,
+        "char_end": 232
+      },
+      {
+        "class": "court_name",
+        "text": "UNITED STATES DISTRICT COURT DISTRICT OF MARYLAND",
+        "attributes": {},
+        "char_start": 526,
+        "char_end": 555
+      },
+      {
+        "class": "court_location",
+        "text": "District of Maryland",
+        "attributes": {},
+        "char_start": 30,
+        "char_end": 50
+      },
+      {
+        "class": "judge_name",
+        "text": "Adam B. Abelson",
+        "attributes": {},
+        "char_start": 239,
+        "char_end": 254
+      },
+      {
+        "class": "plaintiff",
+        "text": "DEREK CRAIN",
+        "attributes": {},
+        "char_start": 52,
+        "char_end": 63
+      },
+      {
+        "class": "defendant",
+        "text": "MACROGENICS, INC.",
+        "attributes": {},
+        "char_start": 962,
+        "char_end": 979
+      },
+      {
+        "class": "defendant",
+        "text": "SCOTT KOENIG",
+        "attributes": {},
+        "char_start": 172,
+        "char_end": 185
+      },
+      {
+        "class": "title",
+        "text": "Motion to Appoint Lead Plaintiff",
+        "attributes": {},
+        "char_start": 1387,
+        "char_end": 1754
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {},
+        "char_start": 1387,
+        "char_end": 1393
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 1311,
+        "char_end": 1328
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 1351,
+        "char_end": 1359
+      },
+      {
+        "class": "filing_date",
+        "text": "September 24, 2024",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 1994,
+        "char_end": 2012
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 2553,
+        "char_end": 2570
+      },
+      {
+        "class": "title",
+        "text": "CERTIFICATE OF SERVICE",
+        "attributes": {},
+        "char_start": 2622,
+        "char_end": 2644
+      },
+      {
+        "class": "document_type",
+        "text": "Certificate of Service",
+        "attributes": {},
+        "char_start": 2622,
+        "char_end": 2644
+      },
+      {
+        "class": "plaintiff",
+        "text": "Ron Bassman",
+        "attributes": {},
+        "char_start": 2484,
+        "char_end": 2495
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 2953,
+        "char_end": 2970
+      },
+      {
+        "class": "judge_name",
+        "text": "ABA",
+        "attributes": {},
+        "char_start": 2967,
+        "char_end": 2970
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 2993,
+        "char_end": 3001
+      }
+    ]
+  },
+  {
+    "file_path": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/004 - MGNX - LP MOL (filed).pdf",
+    "title": "MEMORANDUM OF LAW IN SUPPORT OF THE MOTION OF RON BASSMAN FOR APPOINTMENT AS LEAD PLAINTIFF AND APPROVAL OF SELECTION OF COUNSEL",
+    "document_types": [
+      "Memorandum of Law",
+      "Motion",
+      "Motion",
+      "Motion",
+      "Motion",
+      "Motion",
+      "Motion",
+      "Motion",
+      "Declaration",
+      "Motion",
+      "CERTIFICATE OF SERVICE",
+      "Declaration",
+      "Exhibit",
+      "Motion",
+      "Motion",
+      "Declaration"
+    ],
+    "nuid": "8:24-cv-02184-ABA",
+    "court_name": "UNITED STATES DISTRICT COURT DISTRICT OF MARYLAND",
+    "court_location": "District of Maryland",
+    "judge_name": "Adam B. Abelson",
+    "filing_date": "2024-09-24",
+    "parties": {
+      "plaintiffs": [
+        "DEREK CRAIN",
+        "RON BASSMAN",
+        "Crain",
+        "Ron Bassman"
+      ],
+      "defendants": [
+        "MACROGENICS, INC.",
+        "SCOTT KOENIG",
+        "Scott Koenig",
+        "Defendants",
+        "MacroGenics, Inc.",
+        "the Company"
+      ]
+    },
+    "clauses": [
+      "15 U.S.C. §78u-4(a)(3)(B)(ii) [article_section]"
+    ],
+    "lx_raw_extractions": [
+      {
+        "class": "title",
+        "text": "MEMORANDUM OF LAW IN SUPPORT OF THE MOTION OF RON BASSMAN FOR APPOINTMENT AS LEAD PLAINTIFF AND APPROVAL OF SELECTION OF COUNSEL",
+        "attributes": {},
+        "char_start": 256,
+        "char_end": 387
+      },
+      {
+        "class": "document_type",
+        "text": "Memorandum of Law",
+        "attributes": {},
+        "char_start": 256,
+        "char_end": 273
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {},
+        "char_start": 292,
+        "char_end": 298
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 398,
+        "char_end": 415
+      },
+      {
+        "class": "court_name",
+        "text": "UNITED STATES DISTRICT COURT DISTRICT OF MARYLAND",
+        "attributes": {},
+        "char_start": 0,
+        "char_end": 50
+      },
+      {
+        "class": "court_location",
+        "text": "District of Maryland",
+        "attributes": {},
+        "char_start": 30,
+        "char_end": 50
+      },
+      {
+        "class": "judge_name",
+        "text": "Adam B. Abelson",
+        "attributes": {},
+        "char_start": 237,
+        "char_end": 252
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 440,
+        "char_end": 448
+      },
+      {
+        "class": "plaintiff",
+        "text": "DEREK CRAIN",
+        "attributes": {},
+        "char_start": 52,
+        "char_end": 63
+      },
+      {
+        "class": "plaintiff",
+        "text": "RON BASSMAN",
+        "attributes": {},
+        "char_start": 477,
+        "char_end": 488
+      },
+      {
+        "class": "defendant",
+        "text": "MACROGENICS, INC.",
+        "attributes": {},
+        "char_start": 722,
+        "char_end": 739
+      },
+      {
+        "class": "defendant",
+        "text": "SCOTT KOENIG",
+        "attributes": {},
+        "char_start": 172,
+        "char_end": 185
+      },
+      {
+        "class": "defendant",
+        "text": "Scott Koenig",
+        "attributes": {},
+        "char_start": 1634,
+        "char_end": 1646
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 2259,
+        "char_end": 2276
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 2301,
+        "char_end": 2309
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {},
+        "char_start": 2771,
+        "char_end": 2777
+      },
+      {
+        "class": "defendant",
+        "text": "Defendants",
+        "attributes": {},
+        "char_start": 3034,
+        "char_end": 3044
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 4080,
+        "char_end": 4097
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 4357,
+        "char_end": 4365
+      },
+      {
+        "class": "plaintiff",
+        "text": "Crain",
+        "attributes": {},
+        "char_start": 3989,
+        "char_end": 3994
+      },
+      {
+        "class": "defendant",
+        "text": "MacroGenics, Inc.",
+        "attributes": {},
+        "char_start": 4044,
+        "char_end": 4061
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {}
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 6106,
+        "char_end": 6123
+      },
+      {
+        "class": "judge_name",
+        "text": "ABA",
+        "attributes": {},
+        "char_start": 6120,
+        "char_end": 6123
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 6148,
+        "char_end": 6156
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {},
+        "char_start": 8087,
+        "char_end": 8093
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 8121,
+        "char_end": 8138
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 8163,
+        "char_end": 8171
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {}
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 10250,
+        "char_end": 10267
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 10292,
+        "char_end": 10300
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 12416,
+        "char_end": 12433
+      },
+      {
+        "class": "judge_name",
+        "text": "ABA",
+        "attributes": {},
+        "char_start": 12430,
+        "char_end": 12433
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 12458,
+        "char_end": 12466
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {},
+        "char_start": 14243,
+        "char_end": 14249
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 14552,
+        "char_end": 14569
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 14594,
+        "char_end": 14602
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 16888,
+        "char_end": 16905
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 16930,
+        "char_end": 16938
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {}
+      },
+      {
+        "class": "document_type",
+        "text": "Declaration",
+        "attributes": {},
+        "char_start": 17432,
+        "char_end": 17443
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {},
+        "char_start": 19061,
+        "char_end": 19067
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 18952,
+        "char_end": 18969
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 18994,
+        "char_end": 19002
+      },
+      {
+        "class": "filing_date",
+        "text": "September 24, 2024",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 19488,
+        "char_end": 19506
+      },
+      {
+        "class": "plaintiff",
+        "text": "Ron Bassman",
+        "attributes": {},
+        "char_start": 19978,
+        "char_end": 19989
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 20039,
+        "char_end": 20056
+      },
+      {
+        "class": "title",
+        "text": "CERTIFICATE OF SERVICE",
+        "attributes": {},
+        "char_start": 20113,
+        "char_end": 20135
+      },
+      {
+        "class": "document_type",
+        "text": "CERTIFICATE OF SERVICE",
+        "attributes": {},
+        "char_start": 20113,
+        "char_end": 20135
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 20442,
+        "char_end": 20459
+      },
+      {
+        "class": "filing_date",
+        "text": "September 24, 2024",
+        "attributes": {
+          "iso": "2024-09-24"
+        }
+      },
+      {
+        "class": "defendant",
+        "text": "the Company",
+        "attributes": {},
+        "char_start": 1618,
+        "char_end": 1629
+      },
+      {
+        "class": "document_type",
+        "text": "Declaration",
+        "attributes": {},
+        "char_start": 3795,
+        "char_end": 3806
+      },
+      {
+        "class": "document_type",
+        "text": "Exhibit",
+        "attributes": {},
+        "char_start": 3877,
+        "char_end": 3885
+      },
+      {
+        "class": "title",
+        "text": "APPOINTING MOVANT AS LEAD PLAINTIFF IS APPROPRIATE",
+        "attributes": {},
+        "char_start": 5148,
+        "char_end": 5198
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {
+          "subtype": "Lead Plaintiff"
+        }
+      },
+      {
+        "class": "clause",
+        "text": "15 U.S.C. §78u-4(a)(3)(B)(ii)",
+        "attributes": {
+          "type": "article_section"
+        },
+        "char_start": 5629,
+        "char_end": 6091
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {}
+      },
+      {
+        "class": "document_type",
+        "text": "Declaration",
+        "attributes": {}
+      },
+      {
+        "class": "filing_date",
+        "text": "September 24, 2024",
+        "attributes": {
+          "iso": "2024-09-24"
+        }
+      }
+    ]
+  },
+  {
+    "file_path": "/home/ishaan/work/docFilter/EPONAMix-Inference/Predicted_Relevant/005 - MGNX - LP Proposed Order (filed).pdf",
+    "title": "[PROPOSED] ORDER GRANTING THE MOTION OF RON BASSMAN FOR APPOINTMENT AS LEAD PLAINTIFF AND APPROVAL OF SELECTION OF COUNSEL",
+    "document_types": [
+      "Order",
+      "Motion",
+      "Order",
+      "Order",
+      "Order",
+      "Order",
+      "Order"
+    ],
+    "nuid": "8:24-cv-02184-ABA",
+    "court_name": "UNITED STATES DISTRICT COURT DISTRICT OF MARYLAND",
+    "court_location": "District of Maryland",
+    "judge_name": "Adam B. Abelson",
+    "filing_date": "2024-09-24",
+    "parties": {
+      "plaintiffs": [
+        "DEREK CRAIN",
+        "Ron Bassman"
+      ],
+      "defendants": [
+        "MACROGENICS, INC.",
+        "SCOTT KOENIG"
+      ]
+    },
+    "clauses": [
+      "Section 21D of the Exchange Act [article_section]",
+      "Section 21D (a)(3)(B)(v) of the Exchange Act, 15 U.S.C. § 78u-4(a)(3)(B)(v) [article_section]"
+    ],
+    "lx_raw_extractions": [
+      {
+        "class": "title",
+        "text": "[PROPOSED] ORDER GRANTING THE MOTION OF RON BASSMAN FOR APPOINTMENT AS LEAD PLAINTIFF AND APPROVAL OF SELECTION OF COUNSEL",
+        "attributes": {},
+        "char_start": 256,
+        "char_end": 380
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {},
+        "char_start": 267,
+        "char_end": 272
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 213,
+        "char_end": 230
+      },
+      {
+        "class": "court_name",
+        "text": "UNITED STATES DISTRICT COURT DISTRICT OF MARYLAND",
+        "attributes": {},
+        "char_start": 0,
+        "char_end": 50
+      },
+      {
+        "class": "court_location",
+        "text": "District of Maryland",
+        "attributes": {},
+        "char_start": 30,
+        "char_end": 50
+      },
+      {
+        "class": "judge_name",
+        "text": "Adam B. Abelson",
+        "attributes": {},
+        "char_start": 237,
+        "char_end": 252
+      },
+      {
+        "class": "plaintiff",
+        "text": "DEREK CRAIN",
+        "attributes": {},
+        "char_start": 52,
+        "char_end": 63
+      },
+      {
+        "class": "defendant",
+        "text": "MACROGENICS, INC.",
+        "attributes": {},
+        "char_start": 150,
+        "char_end": 167
+      },
+      {
+        "class": "defendant",
+        "text": "SCOTT KOENIG",
+        "attributes": {},
+        "char_start": 172,
+        "char_end": 185
+      },
+      {
+        "class": "title",
+        "text": "Movant’s Motion for Appointment as Lead Plaintiff and Approval of his Selection of Counsel",
+        "attributes": {},
+        "char_start": 1728,
+        "char_end": 1818
+      },
+      {
+        "class": "document_type",
+        "text": "Motion",
+        "attributes": {
+          "subtype": "Appointment as Lead Plaintiff"
+        },
+        "char_start": 974,
+        "char_end": 980
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 1373,
+        "char_end": 1390
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 1415,
+        "char_end": 1423
+      },
+      {
+        "class": "plaintiff",
+        "text": "Ron Bassman",
+        "attributes": {},
+        "char_start": 1060,
+        "char_end": 1071
+      },
+      {
+        "class": "clause",
+        "text": "Section 21D of the Exchange Act",
+        "attributes": {
+          "type": "article_section"
+        },
+        "char_start": 844,
+        "char_end": 875
+      },
+      {
+        "class": "clause",
+        "text": "Section 21D (a)(3)(B)(v) of the Exchange Act, 15 U.S.C. § 78u-4(a)(3)(B)(v)",
+        "attributes": {
+          "type": "article_section"
+        },
+        "char_start": 1474,
+        "char_end": 1550
+      },
+      {
+        "class": "title",
+        "text": "NEWLY FILED OR TRANSFERRED ACTIONS",
+        "attributes": {},
+        "char_start": 1938,
+        "char_end": 1972
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {},
+        "char_start": 2183,
+        "char_end": 2188
+      },
+      {
+        "class": "title",
+        "text": "LEAD PLAINTIFF APPOINTMENT",
+        "attributes": {},
+        "char_start": 3526,
+        "char_end": 3552
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {},
+        "char_start": 2644,
+        "char_end": 2649
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 3194,
+        "char_end": 3211
+      },
+      {
+        "class": "judge_name",
+        "text": "ABA",
+        "attributes": {},
+        "char_start": 3208,
+        "char_end": 3211
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 3236,
+        "char_end": 3244
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {}
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {},
+        "char_start": 5154,
+        "char_end": 5160
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 4874,
+        "char_end": 4891
+      },
+      {
+        "class": "court_name",
+        "text": "UNITED STATES DISTRICT COURT",
+        "attributes": {},
+        "char_start": 5457,
+        "char_end": 5488
+      },
+      {
+        "class": "judge_name",
+        "text": "Adam B. Abelson",
+        "attributes": {},
+        "char_start": 5449,
+        "char_end": 5464
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 4916,
+        "char_end": 4924
+      },
+      {
+        "class": "nuid",
+        "text": "8:24-cv-02184-ABA",
+        "attributes": {},
+        "char_start": 5503,
+        "char_end": 5520
+      },
+      {
+        "class": "filing_date",
+        "text": "09/24/24",
+        "attributes": {
+          "iso": "2024-09-24"
+        },
+        "char_start": 5545,
+        "char_end": 5553
+      },
+      {
+        "class": "document_type",
+        "text": "Order",
+        "attributes": {
+          "subtype": "Lead Plaintiff"
+        }
+      }
+    ]
+  }
+]

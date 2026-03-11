@@ -62,13 +62,15 @@ _SKIP_LINE = re.compile(
     r"UNITED\s+STATES|U\.S\.|"
     r"IN\s+THE|FOR\s+THE|"
     r"CIVIL|CRIMINAL|"
-    r"CASE\s+NO|DOCKET|"
+    r"CASE\s+NO|CAUSE\s+NO|DOCKET|"
     r"SUPERIOR\s+COURT|DISTRICT\s+COURT|CIRCUIT\s+COURT|SUPREME\s+COURT|"
     r"BANKRUPTCY\s+COURT|FAMILY\s+COURT|COURT\s+OF|STATE\s+OF|COUNTY\s+OF|"
     r"COURT|Hon\.|Judge\b|"
-    r"COMPLAINT|MOTION|NOTICE|"
+    r"COMPLAINT|MOTION|NOTICE|PETITION|ORDER|"
+    r"PLAINTIFF'?S?\s+(?:ORIGINAL|FIRST|SECOND|THIRD|AMENDED)|"
     r"PLAINTIFF|DEFENDANT|PETITIONER|RESPONDENT|"
     r"APPELLANT|APPELLEE|"
+    r"[A-Z]{1,4}\s+\d+\s*\(Rev\b|"
     r"v\.|vs\.|versus"
     r")",
     re.IGNORECASE,
@@ -82,6 +84,10 @@ _COURT_CAPTION_IN_PARTY = re.compile(
     | \bORDER\b.*\bCOURT\b | \bCOURT\b.*\bORDER\b
     | ^CAUSE\s+NO\.                          # Texas state court docket line
     | ^FORM\s+NO\.                           # Texas citation form header
+    | ^[A-Z]{1,4}\s+\d+                      # Federal court form numbers (AO 440, JS 44, etc.)
+    | \(Rev\.                                # Form revision markers "(Rev. 06/12)"
+    | \bSummons\s+in\s+a\s+Civil\s+Action\b  # AO 440 form title
+    | \bCivil\s+Cover\s+Sheet\b              # JS 44 form title
     | \b(?:HOUSTON|DALLAS|SAN\s+ANTONIO|AUSTIN|EL\s+PASO|FORT\s+WORTH)\s+DIVISION\b
                                              # Texas federal/state district divisions
     """,
@@ -102,9 +108,32 @@ _PARTY_SENTENCE_VERB = re.compile(
 
 _MAX_PARTY_NAME_LEN = 350   # multi-defendant blocks can be long
 _MIN_PARTY_NAME_LEN = 2
+_MAX_PARTY_WORD_COUNT = 40  # body-text fragments leak as 50+ word blocks
+
+# Legal reporter citations that should never appear inside a party name
+_CITATION_RE = re.compile(
+    r"\b\d+\s+(?:S\.\s*Ct\.|U\.S\.|F\.\s*(?:2d|3d|4th|Supp\.?\s*(?:2d|3d)?)|"
+    r"Cal\.\s*(?:App\.|Rptr\.)|So\.\s*(?:2d|3d)|N\.(?:E|W|Y)\.\s*(?:2d|3d)?|"
+    r"A\.\s*(?:2d|3d)|P\.\s*(?:2d|3d)|L\.\s*Ed\.\s*2d)\b",
+    re.IGNORECASE,
+)
+
+# Body-text argument/discussion markers
+_BODY_TEXT_RE = re.compile(
+    r"\b(?:pursuant\s+to|holding\s+that|noting\s+that|Rule\s+\d+[a-z]?\b|"
+    r"Section\s+\d+|§\s*\d+)",
+    re.IGNORECASE,
+)
 
 # Single-word entries that can never be party names
 _BARE_CONJUNCTION = frozenset({"AND", "OR", "THE", "A", "AN", "IN", "OF", "FOR", "TO", "BY"})
+
+_LEGAL_SUFFIX_ONLY = re.compile(
+    r"^(?:INC\.?|LLC|LLP|CORP\.?|CO\.?|PLC|LP|LTD\.?|B\.V\.?|N\.A\.?|S\.A\.?|"
+    r"GMBH|INCORPORATED|CORPORATION|COMPANY|LIMITED|P\.?C\.?|"
+    r"PIERCE|FENNER)\s*[,.\s]*$",
+    re.IGNORECASE,
+)
 
 # Signals that a string is an attorney signature block / contact info, not a party name
 _ATTORNEY_BLOCK_RE = re.compile(
@@ -156,25 +185,54 @@ def _is_valid_party(name: str) -> bool:
         return False
     if _COURT_CAPTION_IN_PARTY.search(name):
         return False
-    # Must start with a capital letter — filters "and lead counsel in", "allege that…"
     if not name[0].isupper():
         return False
-    # Reject sentence fragments: body text where Plaintiff/Defendant is a reference
     if _PARTY_SENTENCE_VERB.search(name):
         return False
-    # Reject bare conjunctions / articles standing alone (e.g. "AND", "OR", "THE")
     if name.upper().strip() in _BARE_CONJUNCTION:
         return False
-    # Reject attorney signature blocks (phone, email, bar number, address)
+    if _LEGAL_SUFFIX_ONLY.match(name):
+        return False
     if _ATTORNEY_BLOCK_RE.search(name):
         return False
-    # Reject camelCase merge artifacts — a word where a lowercase letter is
-    # immediately followed by an uppercase letter (e.g. "BrandJOHN") indicates
-    # two tokens were fused at a line-break during PDF/DOCX extraction.
+    # Reject legal citations leaked from the body (e.g. "138 S. Ct. 1061")
+    if _CITATION_RE.search(name):
+        return False
+    # Reject body-text argument fragments ("pursuant to Rule 91a …")
+    if _BODY_TEXT_RE.search(name):
+        return False
+    # Reject excessively long word counts — real party names rarely exceed ~40 words
+    if len(name.split()) > _MAX_PARTY_WORD_COUNT:
+        return False
+    # Reject camelCase merge artifacts (e.g. "BrandJOHN")
     for word in name.split():
         if re.search(r'[a-z][A-Z]', word):
             return False
     return True
+
+
+_ENTITY_BOUNDARY = re.compile(
+    r",\s+(?="
+    r"(?:[A-Z][A-Z\s\.&,'()-]+(?:INC|LLC|LLP|CORP|CO|PLC|LP|LTD|B\.V|N\.A|S\.A|GMBH)"
+    r"[\.,\s])"  # next token looks like a legal entity
+    r"|(?:[A-Z][A-Z\s]{2,}(?:,|$))"  # next token is ALL-CAPS (likely another party)
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _split_enumerated_parties(block: str) -> list[str]:
+    """
+    Split a comma-separated list of enumerated parties (common in captions).
+    Only invoked when a merged block is too long for _is_valid_party.
+
+    Splits on commas that precede an ALL-CAPS name or a legal entity suffix,
+    which typically marks an entity boundary in enumerated defendant lists.
+    """
+    parts = _ENTITY_BOUNDARY.split(block)
+    if len(parts) <= 1:
+        return [block]
+    return [p.strip().rstrip(",").strip() for p in parts if p.strip()]
 
 
 def _merge_multiline_block(lines: list[IndexedLine], max_gap: int = 2) -> list[str]:
@@ -182,6 +240,9 @@ def _merge_multiline_block(lines: list[IndexedLine], max_gap: int = 2) -> list[s
     Merge consecutive non-empty lines into party name blocks.
     A blank line or gap > max_gap line numbers ends a block.
     Returns list of merged party strings.
+
+    If a merged block exceeds _MAX_PARTY_NAME_LEN, attempts to split it
+    into individual party names using comma-based entity boundaries.
     """
     if not lines:
         return []
@@ -210,11 +271,17 @@ def _merge_multiline_block(lines: list[IndexedLine], max_gap: int = 2) -> list[s
     if current:
         blocks.append(" ".join(current))
 
-    return blocks
+    final: list[str] = []
+    for b in blocks:
+        if len(b) > _MAX_PARTY_NAME_LEN:
+            final.extend(_split_enumerated_parties(b))
+        else:
+            final.append(b)
+    return final
 
 
-_PLAINTIFF_LABEL = re.compile(r"^\s*plaintiff", re.IGNORECASE)
-_DEFENDANT_LABEL = re.compile(r"^\s*defendant", re.IGNORECASE)
+_PLAINTIFF_LABEL = re.compile(r"^\s*plaintiffs?\s*[,.:;/]*\s*$", re.IGNORECASE)
+_DEFENDANT_LABEL = re.compile(r"^\s*defendants?\s*[,.:;/]*\s*$", re.IGNORECASE)
 
 # Court location lines that appear inside the caption table but are not parties.
 _COURT_LOCATION_LINE = re.compile(
@@ -240,8 +307,19 @@ def _find_versus_split(
                      "Plaintiff[s]," role label directly above "v."
       • Defendants:  lines between "v." and the "Defendant[s]." role label below it
     """
+    n_caption = len(caption_lines)
     for v_idx, il in enumerate(caption_lines):
-        if not _VERSUS_RE.search(il.text):
+        m = _VERSUS_RE.search(il.text)
+        if not m:
+            continue
+        # Reject false positives from entity suffixes (B.V., N.V., S.V.)
+        pos = m.start()
+        if pos > 0 and il.text[pos - 1] == '.' and pos > 1 and il.text[pos - 2].isalpha():
+            continue
+        # Reject versus markers that appear in the bottom half of the caption
+        # zone — these are typically stub summaries in citations/service docs,
+        # not the main caption separator.
+        if n_caption > 10 and v_idx > n_caption * 0.6:
             continue
 
         above_all = caption_lines[:v_idx]
@@ -332,6 +410,89 @@ def _extract_role_overrides(
                         ))
 
 
+def _extract_form_field_parties(
+    blocks: list[dict],
+    parties: dict[str, list[str]],
+    evidence: list[PartyEvidence],
+) -> None:
+    """
+    Pair PLAINTIFF/PETITIONER: and DEFENDANT/RESPONDENT: form labels with
+    adjacent block values using PDF bounding-box coordinates.
+
+    Court forms (e.g. California EFS-020) place the label in one column and the
+    filled-in value in the next column at the same vertical position.  PyMuPDF
+    extracts them as separate text blocks far apart in the stream, so the
+    line-based role-override approach misses them.  This function finds blocks
+    whose vertical midpoint is within a few points of a label block and whose
+    left edge is to the right of the label — i.e. the adjacent form value.
+    """
+    if not blocks:
+        return
+
+    _LABEL_MAP = {
+        "plaintiff": "plaintiffs",
+        "petitioner": "plaintiffs",
+        "defendant": "defendants",
+        "respondent": "defendants",
+    }
+    _LABEL_RE = re.compile(
+        r"^(?:PLAINTIFF|PETITIONER|DEFENDANT|RESPONDENT)"
+        r"(?:/(?:PLAINTIFF|PETITIONER|DEFENDANT|RESPONDENT))?S?\s*:\s*$",
+        re.IGNORECASE,
+    )
+
+    Y_TOLERANCE = 8  # points of vertical wiggle room
+
+    label_blocks: list[tuple[str, dict]] = []
+    for b in blocks:
+        txt = b.get("text", "").strip()
+        if _LABEL_RE.match(txt):
+            first_word = re.split(r"[/:\s]", txt)[0].lower()
+            role = _LABEL_MAP.get(first_word)
+            if role:
+                label_blocks.append((role, b))
+
+    for role, lb in label_blocks:
+        if parties.get(role):
+            continue
+
+        lx0, ly0, lx1, ly1 = lb["bbox"]
+        l_ymid = (ly0 + ly1) / 2
+
+        candidates: list[tuple[float, dict]] = []
+        for vb in blocks:
+            if vb is lb:
+                continue
+            vx0, vy0, vx1, vy1 = vb["bbox"]
+            v_ymid = (vy0 + vy1) / 2
+
+            if abs(v_ymid - l_ymid) > Y_TOLERANCE:
+                continue
+            if vx0 < lx1:
+                continue
+
+            val = vb.get("text", "").strip()
+            if not val or val.endswith(":"):
+                continue
+            candidates.append((vx0 - lx1, vb))
+
+        candidates.sort(key=lambda c: c[0])
+        for _, vb in candidates:
+            val = re.sub(r"\n.*", "", vb.get("text", "")).strip()
+            name = _clean_party_name(val)
+            if name and _is_valid_party(name):
+                parties[role].append(name)
+                evidence.append(PartyEvidence(
+                    source="form_field",
+                    page=1,
+                    span_text=f"{lb['text'].strip()} → {name}",
+                    char_start=0,
+                    char_end=0,
+                    rule_id=f"form_field:{role}",
+                ))
+                break
+
+
 def _canonical_role(role: str) -> Optional[str]:
     mapping = {
         "plaintiffs":  "plaintiffs",
@@ -398,6 +559,11 @@ def extract_parties(zones: DocumentZones) -> PartyResult:
                 char_end=min(200, len(caption_text)),
                 rule_id="versus_split",
             ))
+
+    # Form-field pairing (PDF only): pair PLAINTIFF/DEFENDANT labels with
+    # adjacent block values using bounding-box coordinates
+    if zones.first_page_blocks:
+        _extract_form_field_parties(zones.first_page_blocks, parties, evidence)
 
     # Role-keyword overrides applied to entire first-page text
     first_page_text = lines_to_text(zones.first_page_zone)

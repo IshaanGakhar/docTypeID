@@ -23,6 +23,7 @@ from pipeline.config import (
     LABEL_BINARIZER_PATH,
     VECTORIZER_WORD_PATH,
     VECTORIZER_CHAR_PATH,
+    CITATION_BOILERPLATE_RE_STR,
 )
 
 
@@ -116,56 +117,80 @@ def _title_segments(title: str) -> list[str]:
 # Rule-based fallback
 # ---------------------------------------------------------------------------
 
+_GENERIC_LABELS = {"Motion", "Order", "Complaint", "Brief", "Notice",
+                   "Judgment", "Petition", "Answer", "Memorandum"}
+
+# Leaf types whose keywords are specific enough that body-text matches are safe
+_LEAF_TYPES = {k for k in (
+    "Motion to Dismiss", "Motion to Stay", "Motion for Summary Judgment",
+    "Motion to Compel", "Motion in Limine", "Motion to Strike",
+    "Motion to Transfer", "Motion to Remand", "Motion for Class Certification",
+    "Motion for Injunction", "Motion for Sanctions", "Motion for Reconsideration",
+    "Motion for Leave to Amend", "Motion for Extension of Time",
+    "Motion for Default Judgment", "Motion to Quash", "Motion to Intervene",
+    "Motion for Judgment on the Pleadings", "Motion for Protective Order",
+    "Temporary Restraining Order", "Preliminary Injunction", "Scheduling Order",
+    "Amended Complaint", "Class Action Complaint",
+    "Opening Brief", "Reply Brief", "Opposition Brief", "Appellate Brief",
+    "Notice of Appeal", "Notice of Removal", "Notice of Motion",
+    "Proposed Order", "Counterclaim", "Cross-Claim", "Third-Party Complaint",
+    "Proof of Service", "Certificate of Service", "Cover Letter",
+    "Demand Letter", "Civil Cover Sheet", "Letter", "Citation",
+    "Pro Hac Vice Motion", "Response", "Entry of Appearance",
+    "Corporate Disclosure Statement", "Order of Transfer",
+    "Exhibit", "Retainer Agreement", "Notice of Voluntary Dismissal",
+)}
+
+
 def _rule_based_classify(text: str, title: str = "") -> DocTypeResult:
     """
     Classify by regex rules when model files are absent.
 
     Runs rules against:
-      1. The full document text (first 3 000 chars)
-      2. Each AND-split segment of the title independently
-
-    This ensures "Motion to Dismiss and Memorandum in Support" correctly
-    yields both "Motion" and "Memorandum" even if neither word appears
-    alone in the body text snippet.
+      1. Title zone / title segments (high confidence)
+      2. Body text for *leaf* (multi-word) types — safe, unlikely to false-positive
+      3. Generic single-word labels (Order, Complaint, …) are only matched
+         in the title zone (first ~500 chars) to prevent ubiquitous body
+         references from triggering false positives.
     """
     body_upper = text[:3000].upper()
+    title_zone_upper = text[:500].upper()
     matched: list[str] = []
     evidence: list[DocTypeEvidence] = []
     probs: dict[str, float] = {}
 
-    # Build search targets: full combined + each title segment separately
-    search_targets: list[tuple[str, str]] = []  # (search_text, label_suffix)
-
     title_segments = _title_segments(title)
+
+    search_targets: list[tuple[str, str]] = []
+
     if title_segments:
-        # First target: full title + body (catches patterns spanning the conjunction)
-        search_targets.append((title_segments[0].upper() + "\n" + body_upper, "full"))
-        # Additional targets: each isolated title segment (higher precision per sub-phrase)
+        search_targets.append((title_segments[0].upper() + "\n" + title_zone_upper, "title_zone"))
         for seg in title_segments[1:]:
             search_targets.append((seg.upper(), f"title_seg:{seg[:30]}"))
     else:
-        search_targets.append((body_upper, "body"))
+        search_targets.append((title_zone_upper, "title_zone"))
 
-    # Generic fallback labels — suppressed when a specific subtype already matched
-    _GENERIC_LABELS = {"Motion", "Order", "Complaint", "Brief", "Notice"}
+    # Body target is only searched for leaf (multi-word) types
+    search_targets.append((body_upper, "body"))
 
-    # Track which generic families already have a specific subtype matched
     matched_families: set[str] = set()
 
     for search_text, src_label in search_targets:
         for doc_type, patterns in DOCTYPE_RULES.items():
             if doc_type in matched:
-                continue   # already found via an earlier target
+                continue
 
-            # Skip generic fallback if a specific subtype for this family matched
             if doc_type in _GENERIC_LABELS and doc_type in matched_families:
+                continue
+
+            # Generic single-word labels must only match in title zone / title segments
+            if doc_type in _GENERIC_LABELS and src_label == "body":
                 continue
 
             for pat_str in patterns:
                 m = re.search(pat_str, search_text)
                 if m:
                     matched.append(doc_type)
-                    # Higher confidence when the signal comes from the title segment
                     conf = 0.90 if src_label.startswith("title_seg") else 0.85
                     probs[doc_type] = conf
                     evidence.append(DocTypeEvidence(
@@ -176,11 +201,35 @@ def _rule_based_classify(text: str, title: str = "") -> DocTypeResult:
                         char_end=m.end(),
                         rule_id=f"doctype_rule:{doc_type}:{src_label}",
                     ))
-                    # Mark the generic family as covered by this specific subtype
                     for generic in _GENERIC_LABELS:
                         if doc_type.startswith(generic):
                             matched_families.add(generic)
                     break
+
+    # Citation boilerplate override: when the first page is a Texas-style
+    # citation/service form, suppress Petition/Answer/Judgment that appear
+    # only because the form boilerplate mentions them as instructions.
+    _CITATION_BP = re.compile(CITATION_BOILERPLATE_RE_STR, re.IGNORECASE)
+    if _CITATION_BP.search(body_upper):
+        _BOILERPLATE_TYPES = {"Petition", "Answer", "Judgment"}
+        matched = [dt for dt in matched if dt not in _BOILERPLATE_TYPES]
+        for dt in _BOILERPLATE_TYPES:
+            probs.pop(dt, None)
+        evidence = [
+            e for e in evidence
+            if not (":" in e.rule_id
+                    and len(e.rule_id.split(":")) > 1
+                    and e.rule_id.split(":")[1] in _BOILERPLATE_TYPES)
+        ]
+        if "Citation" not in matched:
+            matched.insert(0, "Citation")
+            probs["Citation"] = 0.92
+            evidence.append(DocTypeEvidence(
+                source="rule", page=1,
+                span_text=_CITATION_BP.search(body_upper).group(0),
+                char_start=0, char_end=0,
+                rule_id="doctype_rule:Citation:boilerplate_override",
+            ))
 
     confidence = max(probs.values()) if probs else 0.0
     return DocTypeResult(

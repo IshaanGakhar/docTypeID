@@ -325,7 +325,15 @@ Loss and token accuracy are logged every 10 steps. Checkpoints are saved every 1
 python scripts/train_lora.py --infer /path/to/doc.pdf
 ```
 
-### 4. Inspect adapted layers
+### 4. Run inference on a whole folder
+
+Results are saved to `gemma3-270m-lora-adapter/inference_results.json` and streamed as JSONL to stdout.
+
+```bash
+python scripts/train_lora.py --infer-folder /path/to/docs/
+```
+
+### 5. Inspect adapted layers
 
 ```bash
 python scripts/train_lora.py --inspect-layers

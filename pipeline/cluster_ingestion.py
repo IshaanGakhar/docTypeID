@@ -42,6 +42,8 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Optional, Union
 
+from pipeline.court_judge_extractor import _clean_court_name, _clean_location
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -262,8 +264,8 @@ def load_cluster_csv(
             all_dockets_raw=_list_val(v("all_dockets_raw")),
             westlaw_ids=_list_val(v("all_westlaw_ids")),
             lexis_ids=_list_val(v("all_lexis_ids")),
-            court_name=v("court") or None,
-            court_location=v("location") or None,
+            court_name=(_clean_court_name(v("court")) or None) if v("court") else None,
+            court_location=(_clean_location(v("location")) or None) if v("location") else None,
             caption=v("caption") or None,
             cluster_size=_int_val(v("cluster_size")) or cid_counts[cid],
             cluster_stage=v("cluster_stage") or None,
@@ -322,18 +324,56 @@ def _clean_str(val: str) -> str:
     return " ".join(val.split()) if isinstance(val, str) else val
 
 
-def _majority(values: list) -> object:
+def _normalize_court(raw: str) -> str:
+    """Canonical form for court names so surface variants group together.
+
+    Strips common prefixes (IN THE, IN THE UNITED STATES), trailing OF,
+    normalises whitespace and case.  E.g.:
+        "IN THE DISTRICT COURT"           → "district court"
+        "IN THE DISTRICT COURT OF"        → "district court"
+        "District Court"                  → "district court"
+        "UNITED STATES DISTRICT COURT"    → "united states district court"
+        "IN THE UNITED STATES DISTRICT COURT" → "united states district court"
+    """
+    s = re.sub(r"\s+", " ", raw).strip().lower()
+    s = re.sub(r"^in\s+the\s+", "", s)
+    s = re.sub(r"\s+of\s*$", "", s)
+    return s.strip()
+
+
+def _normalize_nuid(raw: str) -> str:
+    """Canonical form for docket/case numbers so formatting variants group together.
+
+    Strips leading zeros from the year component, removes all separators
+    (hyphens, spaces, periods), and lowercases.  E.g.:
+        "18-cv-339231" → "18cv339231"
+        "1:20-cv-05865-NRB" → "120cv05865nrb"
+    """
+    s = re.sub(r"[\-\s\.\:]", "", raw).lower()
+    # Strip leading zeros in first numeric segment (year): "08cv" → "8cv"
+    s = re.sub(r"^0+(\d)", r"\1", s)
+    return s
+
+
+def _majority(values: list, normalize_fn=None) -> object:
     candidates = [v for v in values if v is not None and v != "" and v != []]
     if not candidates:
         return None
     if all(isinstance(v, str) for v in candidates):
-        # Normalize before comparison so "\nDistrict" and "District" count as equal
         normed = [_clean_str(v) for v in candidates]
-        counts: Counter = Counter(v.strip().lower() for v in normed)
-        winner_lower = counts.most_common(1)[0][0]
-        for v in normed:
-            if v.strip().lower() == winner_lower:
-                return v
+        if normalize_fn:
+            keys = [normalize_fn(v) for v in normed]
+        else:
+            keys = [v.strip().lower() for v in normed]
+        counts: Counter = Counter(keys)
+        winner_key = counts.most_common(1)[0][0]
+        # Return the longest original form that maps to the winner key
+        best = None
+        for v, k in zip(normed, keys):
+            if k == winner_key:
+                if best is None or len(v) > len(best):
+                    best = v
+        return best
     return Counter(str(v) for v in candidates).most_common(1)[0][0]
 
 
@@ -414,11 +454,10 @@ def consolidate_cluster(results: list[dict]) -> dict:
         return [r.get(f) for r in non_skipped]
 
     return {
-        "nuid":           _majority(_vals("nuid")),
-        "court_name":     _majority(_vals("court_name")),
+        "nuid":           _majority(_vals("nuid"), normalize_fn=_normalize_nuid),
+        "court_name":     _majority(_vals("court_name"), normalize_fn=_normalize_court),
         "court_location": _majority(_vals("court_location")),
         "judge_name":     _majority(_vals("judge_name")),
-        "filing_date":    _majority(_vals("filing_date")),
         "document_types": majority_doctypes,
         "parties":        _union_parties(non_skipped),
         "n_docs":         n,
@@ -470,22 +509,30 @@ def _verify_scalar(
     p_con = match(pipeline_val, consensus_val)
     c_con = match(csv_val,      consensus_val)
 
+    def _pick_most_specific(*vals: Optional[str]) -> Optional[str]:
+        """Among agreeing values, prefer the longest (most detailed) form."""
+        candidates = [v for v in vals if v]
+        return max(candidates, key=len) if candidates else None
+
     if pipeline_val:
         if p_csv and p_con:
-            return pipeline_val, 0.95, "pipeline+csv+consensus"
+            best = _pick_most_specific(pipeline_val, csv_val, consensus_val)
+            return best, 0.95, "pipeline+csv+consensus"
         elif p_csv:
-            return pipeline_val, 0.90, "pipeline+csv"
+            best = _pick_most_specific(pipeline_val, csv_val)
+            return best, 0.90, "pipeline+csv"
         elif p_con:
-            return pipeline_val, 0.85, "pipeline+consensus"
+            best = _pick_most_specific(pipeline_val, consensus_val)
+            return best, 0.85, "pipeline+consensus"
         elif c_con:
-            # CSV and consensus agree but pipeline disagrees → likely a pipeline error
-            return csv_val, 0.78, "csv+consensus_override"
+            best = _pick_most_specific(csv_val, consensus_val)
+            return best, 0.78, "csv+consensus_override"
         else:
-            # No external corroboration — keep pipeline, no confidence change
             return pipeline_val, None, "pipeline_only"
     else:
         if csv_val and consensus_val and c_con:
-            return csv_val, 0.80, "csv+consensus_fill"
+            best = _pick_most_specific(csv_val, consensus_val)
+            return best, 0.80, "csv+consensus_fill"
         elif csv_val:
             return csv_val, 0.70, "csv_fill"
         elif consensus_val:
@@ -600,8 +647,9 @@ def _verify_and_augment(
         ("court_location", r.get("court_location"), rec.court_location, consensus.get("court_location")),
         # judge: no CSV source, but cluster consensus is useful (same judge per case)
         ("judge_name",     r.get("judge_name"),     None,               consensus.get("judge_name")),
-        # filing_date: per-document primary; consensus fills only when pipeline finds nothing
-        ("filing_date",    r.get("filing_date"),    None,               consensus.get("filing_date")),
+        # filing_date: each document keeps its own pipeline-extracted date.
+        # Cluster consensus is NOT applied — docs in the same cluster often have
+        # different filing/service dates and consensus overwrites them incorrectly.
     ]
 
     for field_name, p_val, c_val, k_val in _SCALAR_FIELDS:
@@ -639,8 +687,9 @@ def _verify_and_augment(
                 _add_ev("parties", "csv_caption",
                         name, f"csv:caption:{role}")
 
-    # Supplement missing roles from cluster consensus
-    # (e.g. pipeline found defendants but not plaintiffs for this doc)
+    # Supplement missing roles from cluster consensus — only when the pipeline
+    # found nothing for that role AND the CSV caption fallback above also failed.
+    # This covers procedural documents (service, notices) that lack a caption.
     consensus_parties = consensus.get("parties", {})
     for role in ("plaintiffs", "defendants", "petitioners", "respondents"):
         if not parties.get(role) and consensus_parties.get(role):
@@ -751,22 +800,39 @@ def run_pipeline_clusters(
     # Step 1 — Run pipeline (raw, no CSV merge)
     raw_results: list[dict] = [{}] * len(tasks)
 
+    try:
+        from tqdm import tqdm
+        _has_tqdm = True
+    except ImportError:
+        _has_tqdm = False
+
     if workers > 1:
         with ProcessPoolExecutor(max_workers=workers) as pool:
             future_to_idx = {pool.submit(_process_file_cluster, t): i
                              for i, t in enumerate(tasks)}
-            done = 0
-            for future in as_completed(future_to_idx):
+            iterator = as_completed(future_to_idx)
+            if progress and _has_tqdm:
+                iterator = tqdm(iterator, total=total_docs,
+                                desc="Extracting", unit="doc", file=sys.stderr)
+            for future in iterator:
                 idx = future_to_idx[future]
                 raw_results[idx] = future.result()
-                done += 1
-                if progress and done % max(1, total_docs // 20) == 0:
-                    print(f"  [{done}/{total_docs}] documents processed",
-                          file=sys.stderr)
     else:
-        for i, task in enumerate(tasks):
+        iterator = enumerate(tasks)
+        if progress and _has_tqdm:
+            iterator = tqdm(iterator, total=total_docs,
+                            desc="Extracting", unit="doc", file=sys.stderr)
+        for i, task in iterator:
             raw_results[i] = _process_file_cluster(task)
-            if progress:
+            if progress and _has_tqdm:
+                r = raw_results[i]
+                status = "SKIP" if r.get("skipped") else "OK"
+                iterator.set_postfix_str(
+                    f"[{status}] cluster {r.get('cluster_id', '?')} | "
+                    f"{Path(str(task_recs[i].file_path)).name[-40:]}",
+                    refresh=True,
+                )
+            elif progress:
                 r      = raw_results[i]
                 status = "SKIP" if r.get("skipped") else "OK"
                 print(
@@ -792,6 +858,13 @@ def run_pipeline_clusters(
 
         cluster_recs = rec_by_cluster[cid]
         first_rec    = cluster_recs[0]
+
+        # NUID consensus: pipeline skips NUID when CSV supplies one, so
+        # consensus.nuid is typically null. Populate it from CSV dockets.
+        if not consensus.get("nuid"):
+            csv_nuids = [rec.nuid for rec in cluster_recs if rec.nuid]
+            if csv_nuids:
+                consensus["nuid"] = _majority(csv_nuids, normalize_fn=_normalize_nuid)
 
         for r, rec in zip(cluster_results, cluster_recs):
             # Step 3 — Three-way verification + augmentation

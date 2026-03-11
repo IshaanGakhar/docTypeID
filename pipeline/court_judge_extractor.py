@@ -79,39 +79,76 @@ _JUDGE_STRUCTURAL = re.compile(
 )
 
 
+_JUDGE_PLACEHOLDER = re.compile(
+    r"^(?:PRESIDING|PREVIOUSLY\s+ASSIGNED|UNASSIGNED|TBD|TBA|"
+    r"PRO\s+TEM|MAGISTRATE|VACANT|SELF|STAFF|CLERK|"
+    r"DUTY\s+JUDGE|NOT\s+(?:YET\s+)?ASSIGNED)$",
+    re.IGNORECASE,
+)
+
+
 def _is_valid_judge_name(name: str) -> bool:
     """Return True only if name plausibly identifies a person."""
     name = name.strip()
     if not name or len(name) < 4:
         return False
     words = name.split()
-    # First word must begin with an uppercase letter
     if not words[0][0].isupper():
         return False
     if _JUDGE_BAD_STARTS.match(name):
         return False
     if _JUDGE_STRUCTURAL.search(name):
         return False
+    if _JUDGE_PLACEHOLDER.match(name):
+        return False
     return True
+
+
+_COURT_CITATION_TAIL = re.compile(
+    r",?\s*\d+\s+(?:Cal\.|S\.\s*Ct\.|U\.S\.|F\.\s*(?:2d|3d|Supp)|"
+    r"A\.\s*(?:2d|3d)|P\.\s*(?:2d|3d)|N\.\w\.\s*(?:2d)?).*$",
+    re.IGNORECASE,
+)
+_COURT_ADDRESS_TAIL = re.compile(
+    r"\s+at\s+\d+.*$", re.IGNORECASE,
+)
+_COURT_CAPTIONED_TAIL = re.compile(
+    r",?\s*captioned\b.*$", re.IGNORECASE,
+)
+
+
+_COURT_TRAILING_OF = re.compile(r"\s+OF\s*$", re.IGNORECASE)
 
 
 def _clean_court_name(raw: str) -> str:
     raw = raw.strip()
-    # Remove trailing noise like ", Division 3"
     raw = _COURT_NOISE.sub("", raw)
-    # Collapse whitespace
+    raw = _COURT_CITATION_TAIL.sub("", raw)
+    raw = _COURT_ADDRESS_TAIL.sub("", raw)
+    raw = _COURT_CAPTIONED_TAIL.sub("", raw)
+    raw = _COURT_TRAILING_OF.sub("", raw)
+    raw = re.sub(r",?\s*COUNTY\s*$", "", raw, flags=re.IGNORECASE)
     return re.sub(r"\s+", " ", raw).strip()
 
 
 _LOC_LOWERCASE_WORDS = frozenset({"of", "the", "and", "or", "in", "at", "for", "de"})
 
 
+_FORM_PLACEHOLDER_RE = re.compile(
+    r"\b(?:BRANCH\s+NAME|CITY\s+AND\s+ZIP|STREET\s+ADDRESS|MAILING\s+ADDRESS)\b",
+    re.IGNORECASE,
+)
+
+
 def _clean_location(raw: str) -> str:
     raw = _LOCATION_PREFIXES.sub("", raw.strip())
     raw = re.sub(r"\s+", " ", raw).strip()
+    if _FORM_PLACEHOLDER_RE.search(raw):
+        raw = _FORM_PLACEHOLDER_RE.sub("", raw).strip()
+        raw = re.sub(r"[:\s]+$", "", raw).strip()
+        if not raw:
+            return ""
     if raw.isupper() or raw == raw.upper():
-        # Title-case but keep prepositions/articles lowercase
-        # e.g. "COUNTY OF SANTA CLARA" → "County of Santa Clara"
         words = raw.title().split()
         raw = " ".join(
             w.lower() if w.lower() in _LOC_LOWERCASE_WORDS and i > 0 else w
@@ -231,7 +268,7 @@ def extract_court_and_judge(
     if crf_result:
         crf_courts = get_entities_by_label(crf_result, "COURT")
         if crf_courts:
-            crf_court = crf_courts[0]
+            crf_court = _clean_court_name(crf_courts[0])
             if not court_name:
                 court_name = crf_court
                 court_evidence.append(CourtEvidence(
@@ -261,6 +298,31 @@ def extract_court_and_judge(
                 char_start=m.start(), char_end=m.end(),
                 rule_id="location_from_court",
             ))
+
+    # If only a bare state name was found, opportunistically scan caption +
+    # first-page text for a more specific county/district/parish qualifier.
+    # This is best-effort — many docs legitimately have only state-level info.
+    if court_location and loc_ev and loc_ev.rule_id == "state_fallback":
+        _county_district_re = re.compile(
+            r"("
+            r"(?:COUNTY|PARISH)\s+OF\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,2}"
+            r"|[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,2}\s+(?:COUNTY|PARISH)"
+            r"|(?:NORTHERN|SOUTHERN|EASTERN|WESTERN|CENTRAL|MIDDLE)\s+DISTRICT\s+OF\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,2}"
+            r")",
+            re.IGNORECASE,
+        )
+        m2 = _county_district_re.search(caption_text)
+        if not m2:
+            m2 = _county_district_re.search(first_page_text)
+        if m2:
+            detailed = _clean_location(m2.group(1))
+            if len(detailed) > len(court_location):
+                court_location = detailed
+                location_evidence.append(CourtEvidence(
+                    source="regex", page=1, span_text=m2.group(0),
+                    char_start=m2.start(), char_end=m2.end(),
+                    rule_id="location_detail_upgrade",
+                ))
 
     location_confidence = 0.85 if court_location and loc_ev else (0.5 if court_location else 0.0)
 

@@ -30,8 +30,11 @@ Usage:
     # Train
     python scripts/train_lora.py
 
-    # Inference with trained adapter
+    # Inference with trained adapter — single document
     python scripts/train_lora.py --infer /path/to/doc.pdf
+
+    # Inference on a whole folder (results → gemma3-270m-lora-adapter/inference_results.json)
+    python scripts/train_lora.py --infer-folder /path/to/docs/
 
     # Inspect which layers have adapters
     python scripts/train_lora.py --inspect-layers
@@ -316,13 +319,15 @@ def train():
 # Inference with trained adapter
 # ---------------------------------------------------------------------------
 
-def infer(doc_path: str):
+def _load_model_and_tokenizer():
+    """Load the base model + LoRA adapter and tokenizer. Call once, reuse."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import PeftModel
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from pipeline.pdf_loader import load_document
-    from pipeline.preprocess import preprocess
+    if not (OUT_DIR / "adapter_config.json").exists():
+        raise FileNotFoundError(
+            f"No trained adapter found at {OUT_DIR}. Run training first."
+        )
 
     tok = AutoTokenizer.from_pretrained(BASE_MODEL, use_fast=True)
     base = AutoModelForCausalLM.from_pretrained(
@@ -332,12 +337,22 @@ def infer(doc_path: str):
     )
     model = PeftModel.from_pretrained(base, str(OUT_DIR))
     model.eval()
+    return model, tok
+
+
+def _infer_one(doc_path: str, model, tok) -> dict:
+    """
+    Run the trained adapter on a single document file.
+    Returns the parsed metadata dict (or raw string on parse failure).
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from pipeline.pdf_loader import load_document
+    from pipeline.preprocess import preprocess
 
     doc   = load_document(doc_path)
     zones = preprocess(doc)
-    prompt_text = _build_prompt(zones)
 
-    messages = [{"role": "user", "content": prompt_text}]
+    messages = [{"role": "user", "content": _build_prompt(zones)}]
     prompt = tok.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
@@ -353,15 +368,66 @@ def infer(doc_path: str):
         )
 
     response = tok.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
-    print(response)
 
     try:
         import json_repair
-        parsed = json_repair.loads(response)
-        print("\nParsed JSON:")
-        print(json.dumps(parsed, indent=2, ensure_ascii=False))
+        return json_repair.loads(response)
     except Exception:
-        pass
+        return {"_raw": response}
+
+
+def infer(doc_path: str):
+    """Single-document inference — prints result to stdout."""
+    model, tok = _load_model_and_tokenizer()
+    result = _infer_one(doc_path, model, tok)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
+def infer_folder(folder_path: str):
+    """
+    Run inference on every supported document in folder_path.
+    Results are saved to OUT_DIR/inference_results.json and also
+    printed as JSONL to stdout.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from pipeline.pdf_loader import SUPPORTED_EXTENSIONS
+
+    folder = Path(folder_path)
+    if not folder.is_dir():
+        print(f"Error: '{folder_path}' is not a directory.", file=sys.stderr)
+        sys.exit(1)
+
+    docs = sorted(
+        p for p in folder.rglob("*")
+        if p.suffix.lower() in SUPPORTED_EXTENSIONS
+    )
+    if not docs:
+        print(f"No supported documents found in {folder_path}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Found {len(docs)} document(s). Loading model…")
+    model, tok = _load_model_and_tokenizer()
+
+    results: list[dict] = []
+    for i, doc_path in enumerate(docs, 1):
+        print(f"[{i}/{len(docs)}] {doc_path.name} … ", end="", flush=True)
+        try:
+            meta = _infer_one(str(doc_path), model, tok)
+            record = {"file_path": str(doc_path), **meta}
+            print("done")
+        except Exception as e:
+            record = {"file_path": str(doc_path), "_error": str(e)}
+            print(f"ERROR: {e}", file=sys.stderr)
+
+        results.append(record)
+        print(json.dumps(record, ensure_ascii=False))   # JSONL to stdout
+
+    out_file = OUT_DIR / "inference_results.json"
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2, ensure_ascii=False)
+
+    print(f"\nSaved {len(results)} result(s) to {out_file}")
 
 
 # ---------------------------------------------------------------------------
@@ -512,7 +578,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gemma 3 270M LoRA training for metadata extraction")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--infer", metavar="DOC_PATH",
-                       help="Run inference with the trained adapter on a single document")
+                       help="Run inference on a single document")
+    group.add_argument("--infer-folder", metavar="FOLDER_PATH",
+                       help="Run inference on all documents in a folder; "
+                            f"results saved to {OUT_DIR}/inference_results.json")
     group.add_argument("--inspect-layers", action="store_true",
                        help="Print all LoRA-adapted module names")
     group.add_argument("--visualize", action="store_true",
@@ -523,6 +592,8 @@ if __name__ == "__main__":
 
     if args.infer:
         infer(args.infer)
+    elif args.infer_folder:
+        infer_folder(args.infer_folder)
     elif args.inspect_layers:
         inspect_layers()
     elif args.visualize:

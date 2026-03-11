@@ -48,6 +48,7 @@ class DocumentZones:
     body_zone: list[IndexedLine]      # everything after title_zone
     first_page_zone: list[IndexedLine]
     full_text_clean: str              # whitespace-normalised full text
+    first_page_blocks: list[dict] = field(default_factory=list)  # PDF block-level bboxes
 
 
 # ---------------------------------------------------------------------------
@@ -180,6 +181,7 @@ def preprocess(doc: LoadedDocument) -> DocumentZones:
         body_zone=body_zone,
         first_page_zone=first_page_zone,
         full_text_clean=full_text_clean,
+        first_page_blocks=doc.page_blocks if doc.page_blocks else [],
     )
 
 

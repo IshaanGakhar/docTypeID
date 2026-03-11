@@ -1,0 +1,67 @@
+{
+  "total_documents": 5,
+  "processed": 5,
+  "skipped": 0,
+  "errors": 0,
+  "fields": {
+    "title": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "nuid": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "court_name": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "court_location": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "judge_name": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "filing_date": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "plaintiffs": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "defendants": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "document_types": {
+      "filled": 5,
+      "total": 5,
+      "pct": 100.0
+    },
+    "clauses": {
+      "filled": 2,
+      "total": 5,
+      "pct": 40.0
+    }
+  },
+  "token_usage": {
+    "source": "gemini_api (usage_metadata)",
+    "api_calls": 76,
+    "input_tokens": 103646,
+    "output_tokens": 9520,
+    "total_tokens": 189482,
+    "total_input_chars": 32062,
+    "total_output_chars": 3652
+  }
+}

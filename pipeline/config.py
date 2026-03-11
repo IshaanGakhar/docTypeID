@@ -98,6 +98,15 @@ DOCUMENT_TYPE_LABELS = [
     "Cross-Claim",
     "Third-Party Complaint",
     "Proposed Order",
+    "Citation",
+    "Pro Hac Vice Motion",
+    "Response",
+    "Entry of Appearance",
+    "Corporate Disclosure Statement",
+    "Order of Transfer",
+    "Exhibit",
+    "Retainer Agreement",
+    "Notice of Voluntary Dismissal",
 ]
 
 # ---------------------------------------------------------------------------
@@ -144,7 +153,7 @@ TITLE_BOOST_PHRASES = [
 # Words / phrases that start a continuation line of a compound title.
 # e.g. "MOTION TO DISMISS" followed by "AND CHANGE OF VENUE"
 TITLE_CONTINUATION_WORDS = [
-    "AND", "OR", "FOR", "TO", "OF", "IN", "WITH", "UPON",
+    "AND", "OR", "FOR", "TO", "OF", "IN", "WITH", "UPON", "AS",
     "PURSUANT", "REGARDING", "RE:", "&",
 ]
 
@@ -237,6 +246,35 @@ DOCTYPE_RULES: dict[str, list[str]] = {
     "Cross-Claim":                    [r"\bCROSS[- ]CLAIM\b"],
     "Third-Party Complaint":          [r"\bTHIRD[- ]PARTY\s+COMPLAINT\b"],
     "Proposed Order":                 [r"\bPROPOSED\s+ORDER\b"],
+    "Citation":                       [r"\bCITATION\b.{0,40}\byou\s+have\s+been\s+sued\b",
+                                       r"\byou\s+have\s+been\s+sued\b",
+                                       r"\bCITATION\s+BY\s+(?:SERVING|PUBLICATION)\b",
+                                       r"\bTHE\s+STATE\s+OF\s+TEXAS\b.{0,60}\bCITATION\b"],
+    "Proof of Service":               [r"\bPROOF\s+OF\s+SERVICE\b"],
+    "Certificate of Service":         [r"\bCERTIFICATE\s+OF\s+SERVICE\b"],
+    "Cover Letter":                   [r"\bCOVER\s+LETTER\b", r"\bTRANSMITTAL\s+LETTER\b"],
+    "Demand Letter":                  [r"\bDEMAND\s+LETTER\b", r"\bNOTICE\s+AND\s+DEMAND\b"],
+    "Civil Cover Sheet":              [r"\bCIVIL\s+COVER\s+SHEET\b"],
+    "Letter":                         [r"\bLETTER\s+BRIEF\b",
+                                       r"\bLETTER\s+TO\s+(?:THE\s+)?(?:COURT|JUDGE)\b",
+                                       r"\bDEAR\s+(?:JUDGE|HON(?:ORABLE)?\.?|MAGISTRATE|JUSTICE)\b"],
+    "Pro Hac Vice Motion":            [r"\bPRO\s+HAC\s+VICE\b",
+                                       r"\bAPPEAR\s+PHV\b",
+                                       r"\bADMISSION\s+PRO\s+HAC\b"],
+    "Response":                       [r"\bRESPONSE\s+(?:TO|IN)\b",
+                                       r"\bOMNIBUS\s+RESPONSE\b"],
+    "Entry of Appearance":            [r"\bENTRY\s+OF\s+APPEARANCE\b",
+                                       r"\bAPPEARANCE\s+OF\s+COUNSEL\b",
+                                       r"\bNOTICE\s+OF\s+APPEARANCE\b"],
+    "Corporate Disclosure Statement": [r"\bCORPORATE\s+DISCLOSURE\s+STATEMENT\b",
+                                       r"\bRULE\s+7\.1\s+(?:CORPORATE\s+)?DISCLOSURE\b",
+                                       r"\b7\.1\s+DISCLOSURE\s+STATEMENT\b"],
+    "Order of Transfer":              [r"\bORDER\s+OF\s+TRANSFER\b",
+                                       r"\bTRANSFER\s+ORDER\b"],
+    "Exhibit":                        [r"\bEXHIBIT\s+[A-Z0-9]+\b"],
+    "Retainer Agreement":             [r"\bRETAINER\s+(?:AGREEMENT|LETTER)\b",
+                                       r"\bRETAINED\b.{0,40}\bTO\s+REPRESENT\s+YOU\b"],
+    "Notice of Voluntary Dismissal":  [r"\bVOLUNTARY\s+DISMISSAL\b"],
 }
 
 # ---------------------------------------------------------------------------
@@ -262,10 +300,14 @@ COURT_LOCATION_PATTERNS = [
     # 2. Standalone directional: "NORTHERN DISTRICT OF TEXAS" (must come before bare DISTRICT OF
     #    so "NORTHERN DISTRICT OF TEXAS" isn't truncated to just "TEXAS")
     r"\b((?:NORTHERN|SOUTHERN|EASTERN|WESTERN|CENTRAL|MIDDLE)[ \t]+DISTRICT[ \t]+OF[ \t]+[A-Z][A-Za-z ]+?)(?:\n|$|,|[ \t]{2,})",
-    # 3. County courts: "COUNTY OF SANTA CLARA" or "COUNTY OF LOS ANGELES"
-    #    Limit to 3 words max after "OF" so form labels like
-    #    "County of Residence of First Listed Plaintiff" don't match.
+    # 3a. County courts: "COUNTY OF SANTA CLARA" or "COUNTY OF LOS ANGELES"
+    #     Limit to 3 words max after "OF" so form labels like
+    #     "County of Residence of First Listed Plaintiff" don't match.
     r"\b(COUNTY[ \t]+OF[ \t]+[A-Z][A-Za-z]{1,}(?:[ \t]+[A-Z][A-Za-z]{1,}){0,2})(?:\n|$|,|[ \t]{2,})",
+    # 3b. Reversed county: "DALLAS COUNTY" / "SANTA CLARA COUNTY"
+    r"\b([A-Z][A-Za-z]+(?:[ \t]+[A-Z][A-Za-z]+){0,2}[ \t]+COUNTY)\b",
+    # 3c. Parish (Louisiana): "ORLEANS PARISH" or "PARISH OF ORLEANS"
+    r"\b((?:[A-Z][A-Za-z]+[ \t]+)?PARISH(?:[ \t]+OF[ \t]+[A-Z][A-Za-z ]+?)?)\b",
     # 4. "DISTRICT OF MARYLAND" bare (least specific — captures only state; last resort)
     r"(?:DISTRICT[ \t]+OF[ \t]+)([A-Z][A-Za-z ]{2,30})(?:\n|$|,)",
 ]
@@ -283,17 +325,27 @@ US_STATES = (
 # ---------------------------------------------------------------------------
 # Judge extraction regex patterns
 # ---------------------------------------------------------------------------
+# A name part is either a full word (Dale, Tillery) or a single-letter initial
+# optionally followed by a period (B. or B), with 1+ whitespace between parts.
+_NAME_PART     = r"[A-Z][a-z]+"                 # mixed-case word: Dale, Reice
+_INITIAL       = r"[A-Z]\.?"                     # middle initial: B or B.
+_MC_NAME_WORD  = rf"(?:{_NAME_PART}|{_INITIAL})" # either form
+_MC_NAME       = rf"(?:{_MC_NAME_WORD}\s+){{1,4}}{_NAME_PART}"  # 2-5 parts, last must be a word
+
+_UC_NAME_PART  = r"[A-Z]+\.?"                    # ALL-CAPS word or initial
+_UC_NAME       = rf"(?:{_UC_NAME_PART}\s+){{1,4}}{_UC_NAME_PART}"
+
 JUDGE_PATTERNS = [
-    r"(?:Hon(?:orable)?\.?\s+)((?:[A-Z][a-z]+\s+){1,3}[A-Z][a-z]+)",
-    r"(?:Judge\s+)((?:[A-Z][a-z]+\s+){0,2}[A-Z][a-z]+)",
-    r"(?:Magistrate\s+Judge\s+)((?:[A-Z][a-z]+\s+){0,2}[A-Z][a-z]+)",
-    r"(?:Chief\s+Judge\s+)((?:[A-Z][a-z]+\s+){0,2}[A-Z][a-z]+)",
-    r"(?:Senior\s+Judge\s+)((?:[A-Z][a-z]+\s+){0,2}[A-Z][a-z]+)",
-    r"(?:Justice\s+)((?:[A-Z][a-z]+\s+){0,2}[A-Z][a-z]+)",
-    r"(?:JUDGE\s+)((?:[A-Z][A-Z\s]+))",
-    r"(?:HONORABLE\s+)((?:[A-Z][A-Z\s]+))",
-    r"(?:Before\s+(?:the\s+)?(?:Honorable|Hon\.?)\s+)((?:[A-Z][a-z]+\s+){1,3}[A-Z][a-z]+)",
-    r"(?:Assigned\s+to[:\s]+)((?:[A-Z][a-z]+\s+){1,3}[A-Z][a-z]+)",
+    rf"(?:Hon(?:orable)?\.?\s+)({_MC_NAME})",
+    rf"(?:Judge\s+)({_MC_NAME})",
+    rf"(?:Magistrate\s+Judge\s+)({_MC_NAME})",
+    rf"(?:Chief\s+Judge\s+)({_MC_NAME})",
+    rf"(?:Senior\s+Judge\s+)({_MC_NAME})",
+    rf"(?:Justice\s+)({_MC_NAME})",
+    rf"(?:JUDGE\s+)({_UC_NAME})",
+    rf"(?:HONORABLE\s+)({_UC_NAME})",
+    rf"(?:Before\s+(?:the\s+)?(?:Honorable|Hon\.?)\s+)({_MC_NAME})",
+    rf"(?:Assigned\s+to[:\s]+)({_MC_NAME})",
 ]
 
 # ---------------------------------------------------------------------------
@@ -340,6 +392,8 @@ DATE_PREFIX_STEMS = [
     r"recorded",
     r"submitted",
     r"stamped",
+    r"given\s+under\s+my\s+hand",
+    r"this\s+(?:the\s+)?\d{1,2}(?:st|nd|rd|th)?\s+day\s+of",
 ]
 
 # Separator variants between keyword and date:
@@ -351,6 +405,33 @@ DATE_PREFIX_SEPARATORS = [
     r"\s*–\s*",      # " – " (en dash)
     r"\s*—\s*",      # " — " (em dash)
     r"\s+",          # plain space
+]
+
+# ECF (Electronic Case Filing) header pattern — authoritative date source
+# Matches: "Case 1:19-cv-00886-DLC Document 168 Filed 05/26/21 Page 1 of 2"
+ECF_HEADER_PATTERN = (
+    r"(?:Case|Docket)\s+[\w:\-]+\s+Document\s+\d+\s+Filed\s+"
+    r"(\d{1,2}/\d{1,2}/\d{2,4})"
+)
+
+# Negative-context patterns: dates appearing near these are NOT filing dates
+DATE_NEGATIVE_PATTERNS = [
+    # Case citations: "138 S. Ct. 1061 (2018)"
+    r"\d+\s+S\.\s*Ct\.\s*\d+",
+    # Federal reporter citations: "123 F.3d 456"
+    r"\d+\s+F\.\d[a-z]*\s+\d+",
+    # U.S. reporter: "123 U.S. 456"
+    r"\d+\s+U\.S\.\s+\d+",
+    # Parenthetical year at end of citation: "(2018)" or "(S.D.N.Y. 2020)"
+    r"\([A-Z][A-Za-z\.\s,]*\d{4}\)",
+    # Biographical / incorporation
+    r"\bborn\s+(?:on\s+)?",
+    r"\bincorporat(?:ed|ion)\s+(?:(?:on|in)\s+)?",
+    # Legal history of other cases
+    r"\bamended\s+(?:on\s+)?",
+    r"\bdecided\s+(?:on\s+)?",
+    # News / article attributions
+    r"\barticle\s+(?:dated|from)\s+",
 ]
 
 # ---------------------------------------------------------------------------
@@ -417,6 +498,18 @@ CANONICAL_CLAUSE_HEADINGS: dict[str, str] = {
     "WHEREFORE":               "relief",
     "THEREFORE":               "relief",
 }
+
+# ---------------------------------------------------------------------------
+# Texas citation boilerplate detection
+# ---------------------------------------------------------------------------
+# When a document matches this pattern on its first page, it is a citation /
+# service-of-process form.  The boilerplate text (answer, petition, judgment)
+# must be suppressed so it doesn't pollute doc-type and title extraction.
+CITATION_BOILERPLATE_RE_STR = (
+    r"(?:you\s+have\s+been\s+sued|"
+    r"citation\s+by\s+(?:serving|publication)|"
+    r"issued\s+this\s+citation\b)"
+)
 
 MIN_CLAUSE_TEXT_LENGTH = 20  # minimum body text length to keep a clause
 
