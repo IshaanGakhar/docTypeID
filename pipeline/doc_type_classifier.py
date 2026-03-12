@@ -135,7 +135,8 @@ _LEAF_TYPES = {k for k in (
     "Notice of Appeal", "Notice of Removal", "Notice of Motion",
     "Proposed Order", "Counterclaim", "Cross-Claim", "Third-Party Complaint",
     "Proof of Service", "Certificate of Service", "Cover Letter",
-    "Demand Letter", "Civil Cover Sheet", "Letter", "Citation",
+    "Demand Letter", "Letter Brief", "Letter Motion", "Letter to Court",
+    "Civil Cover Sheet", "Letter", "Citation",
     "Pro Hac Vice Motion", "Response", "Entry of Appearance",
     "Corporate Disclosure Statement", "Order of Transfer",
     "Exhibit", "Retainer Agreement", "Notice of Voluntary Dismissal",
@@ -231,6 +232,8 @@ def _rule_based_classify(text: str, title: str = "") -> DocTypeResult:
                 rule_id="doctype_rule:Citation:boilerplate_override",
             ))
 
+    matched, probs, evidence = _ensure_letter_base_tag(matched, probs, evidence)
+
     confidence = max(probs.values()) if probs else 0.0
     return DocTypeResult(
         document_types=matched,
@@ -239,6 +242,37 @@ def _rule_based_classify(text: str, title: str = "") -> DocTypeResult:
         evidence=evidence,
         fallback_used=True,
     )
+
+
+# ---------------------------------------------------------------------------
+# Letter base-tag enforcement
+# ---------------------------------------------------------------------------
+
+_LETTER_SUBTYPES = {
+    "Cover Letter", "Demand Letter", "Letter Brief",
+    "Letter Motion", "Letter to Court",
+}
+
+
+def _ensure_letter_base_tag(
+    matched: list[str],
+    probs: dict[str, float],
+    evidence: list[DocTypeEvidence],
+) -> tuple[list[str], dict[str, float], list[DocTypeEvidence]]:
+    """If any letter subtype is present, ensure 'Letter' base tag is too."""
+    has_subtype = any(dt in _LETTER_SUBTYPES for dt in matched)
+    if has_subtype and "Letter" not in matched:
+        matched.append("Letter")
+        probs["Letter"] = max(
+            (probs.get(dt, 0.0) for dt in _LETTER_SUBTYPES if dt in probs),
+            default=0.85,
+        )
+        evidence.append(DocTypeEvidence(
+            source="rule", page=1, span_text="(inferred from letter subtype)",
+            char_start=0, char_end=0,
+            rule_id="doctype_rule:Letter:subtype_inference",
+        ))
+    return matched, probs, evidence
 
 
 # ---------------------------------------------------------------------------
@@ -317,6 +351,8 @@ def _model_classify(
                     char_end=min(80, len(combined)),
                     rule_id=f"model:{doc_type}",
                 ))
+
+        matched, probs, evidence = _ensure_letter_base_tag(matched, probs, evidence)
 
         confidence = max(probs.values()) if probs else 0.0
         return DocTypeResult(

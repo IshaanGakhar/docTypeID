@@ -35,6 +35,7 @@ from pipeline.config import (
     TITLE_CONTINUATION_MAX_GAP,
     CITATION_BOILERPLATE_RE_STR,
     DOCUMENT_TYPE_LABELS,
+    DOCTYPE_RULES,
 )
 from pipeline.preprocess import DocumentZones, IndexedLine, lines_to_text
 
@@ -115,18 +116,27 @@ _COURT_HEADER_RE = re.compile(
     # Common case-name suffixes appearing alone after "IN RE" is split off
     r"SECURITIES\s+LITIGATION|"
     r"SHAREHOLDER\s+LITIGATION|"
-    r"CLASS\s+ACTION|"
+    r"CLASS\s+ACTION\s*$|"
     # Consolidation phrases used as sub-headings in multi-case filings
     r"ALL\s+ACTIONS|"
         # Section headings that score highly but are structural, not titles
     r"TABLE\s+OF\s+(?:CONTENTS|AUTHORITIES)|"
     r"(?:ARGUMENT|CONCLUSION|INTRODUCTION|DISCUSSION|ANALYSIS|BACKGROUND|SUMMARY|"
+    r"NATURE\s+OF\s+(?:THE\s+)?ACTION|NATURE\s+OF\s+(?:THE\s+)?CASE|"
+    r"PARTIES\s+AND\s+JURISDICTION|JURISDICTION\s+AND\s+VENUE|FACTUAL\s+(?:BACKGROUND|ALLEGATIONS)|"
     r"STATEMENT\s+OF|LEGAL\s+STANDARD|STANDARD\s+OF\s+REVIEW|PRAYER\s+FOR\s+RELIEF|"
-    r"RELIEF\s+REQUESTED)\s*$|"
+    r"RELIEF\s+REQUESTED|JURY\s+(?:TRIAL\s+)?DEMAND(?:ED)?|"
+    r"NATURE\s+OF\s+SUIT)\s*$|"
+    # Civil cover sheet form field labels and headings
+    r"CAUSE\s+OF\s+ACTION|"
+    r"ATTORNEYS\s+\(|"
+    r"NATURE\s+OF\s+SUIT\b|"
+    # NY Supreme Court assignment designations ("IAS MOTION 54EFM", "IAS PART 12")
+    r"IAS\s+(?:MOTION|PART)\s+\w+\s*$|"
     # Texas / other state court filing stamps
     r"DISTRICT\s+CLERK|"
-    # Judicial closing lines
-    r"IT\s+IS\s+(?:HEREBY\s+)?(?:SO\s+)?ORDER"
+    # Judicial / stipulation closing lines
+    r"IT\s+IS\s+(?:HEREBY\s+)?(?:SO\s+)?(?:ORDER|STIPULAT|ADJUDG)"
     r")",
     re.IGNORECASE,
 )
@@ -346,6 +356,12 @@ def _collect_candidates(lines: list[IndexedLine]) -> list[tuple[IndexedLine, str
                               "", text, flags=re.IGNORECASE).strip()
             if not stripped:
                 continue
+            # Reject body-text prose: long sentence-case lines starting with a
+            # role word (e.g. "Plaintiff Derek Crain ... alleges ...") that don't
+            # contain a doc-type keyword are body text, not titles.
+            has_title_kw = bool(_PREFIX_PATTERN.search(text))
+            if not has_title_kw and len(text) > 60:
+                continue
             candidates.append((il, "opening_pattern"))
             seen_texts.add(text)
 
@@ -390,7 +406,8 @@ def _merge_compound_title(
     """
     _HANG_WORDS = {w.upper() for w in TITLE_CONTINUATION_WORDS}
     _HANG_WORDS |= {"DEFENDANT", "DEFENDANTS", "PLAINTIFF", "PLAINTIFFS",
-                    "PETITIONER", "PETITIONERS", "RESPONDENT", "RESPONDENTS"}
+                    "PETITIONER", "PETITIONERS", "RESPONDENT", "RESPONDENTS",
+                    "THE", "ITS", "HIS", "HER", "THEIR"}
 
     # Find this line's position in all_lines
     start_idx = next(
@@ -532,17 +549,41 @@ def _rank_candidates(
     for i, (il, reason) in enumerate(candidates):
         boost = _compute_boost(il.text)
         base  = sims[i]
+        has_prefix = bool(_PREFIX_PATTERN.match(il.text.strip()))
         if reason == "opening_pattern":
             # Opening patterns that contain a doc-type keyword (PETITION,
             # COMPLAINT, MOTION …) are legitimate titles and should not be
             # penalized.  Only penalize those that are purely procedural
             # (e.g. "Comes Now" boilerplate without a doc-type keyword).
-            if _PREFIX_PATTERN.match(il.text.strip()):
+            if has_prefix:
                 base *= 1.2
             else:
                 base *= 0.5
         elif reason == "title_prefix":
             base *= 1.4
+
+        # Candidates containing a doc-type keyword (COMPLAINT, MOTION, etc.)
+        # that score 0.0 in TF-IDF still deserve a floor score — they are
+        # strong title signals that TF-IDF misses when the keyword doesn't
+        # appear in body context.  Only a floor, not an amplifier, to avoid
+        # over-promoting second-half lines that happen to contain a keyword.
+        has_doctype_kw = has_prefix or any(
+            re.search(r"\b" + re.escape(p) + r"\b", il.text.strip(), re.IGNORECASE)
+            for p in TITLE_PREFIXES
+        )
+        if has_doctype_kw and base == 0.0:
+            base = 0.05
+
+        # Early lines whose text exactly matches a known document type name
+        # (from DOCTYPE_RULES) are almost certainly the document title — these
+        # are form headers like "CIVIL COVER SHEET", "PROOF OF SERVICE", etc.
+        cand_upper = il.text.strip().upper()
+        if il.line_num <= 10:
+            for dt_name in DOCTYPE_RULES:
+                if dt_name.upper() == cand_upper:
+                    base = max(base, 0.20)
+                    break
+
         scored.append((il, reason, base * boost))
 
     scored.sort(key=lambda x: x[2], reverse=True)

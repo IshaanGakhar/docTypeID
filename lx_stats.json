@@ -1,67 +1,67 @@
 {
-  "total_documents": 5,
-  "processed": 5,
-  "skipped": 0,
-  "errors": 0,
+  "total_documents": 320,
+  "processed": 300,
+  "skipped": 20,
+  "errors": 20,
   "fields": {
     "title": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 296,
+      "total": 300,
+      "pct": 98.7
     },
     "nuid": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 268,
+      "total": 300,
+      "pct": 89.3
     },
     "court_name": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 280,
+      "total": 300,
+      "pct": 93.3
     },
     "court_location": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 281,
+      "total": 300,
+      "pct": 93.7
     },
     "judge_name": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 117,
+      "total": 300,
+      "pct": 39.0
     },
     "filing_date": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 271,
+      "total": 300,
+      "pct": 90.3
     },
     "plaintiffs": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 279,
+      "total": 300,
+      "pct": 93.0
     },
     "defendants": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 276,
+      "total": 300,
+      "pct": 92.0
     },
     "document_types": {
-      "filled": 5,
-      "total": 5,
-      "pct": 100.0
+      "filled": 297,
+      "total": 300,
+      "pct": 99.0
     },
     "clauses": {
-      "filled": 2,
-      "total": 5,
-      "pct": 40.0
+      "filled": 80,
+      "total": 300,
+      "pct": 26.7
     }
   },
   "token_usage": {
     "source": "gemini_api (usage_metadata)",
-    "api_calls": 76,
-    "input_tokens": 103646,
-    "output_tokens": 9520,
-    "total_tokens": 189482,
-    "total_input_chars": 32062,
-    "total_output_chars": 3652
+    "api_calls": 15943,
+    "input_tokens": 23782392,
+    "output_tokens": 1379105,
+    "total_tokens": 40987563,
+    "total_input_chars": 3892748,
+    "total_output_chars": 439240
   }
 }

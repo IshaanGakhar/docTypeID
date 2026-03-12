@@ -15,11 +15,15 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
 import re
 import subprocess
 import sys
+import threading
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional
 
@@ -340,6 +344,34 @@ def discover_files(folder: Path) -> list[Path]:
     return sorted(set(files))
 
 
+def _load_cluster_file_list(csv_path: Path) -> list[Path]:
+    """Load file paths from a cluster CSV, dropping singletons/noise."""
+    cluster_sizes: Counter[str] = Counter()
+    rows: list[dict] = []
+    with open(csv_path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rows.append(row)
+            cid = row.get("cluster_id", "")
+            cluster_sizes[cid] += 1
+
+    files: list[Path] = []
+    seen: set[str] = set()
+    for row in rows:
+        cid = row.get("cluster_id", "")
+        if cid in ("-1", "noise") or cluster_sizes[cid] <= 1:
+            continue
+        doc_path = row.get("document_path", "")
+        if not doc_path or doc_path in seen:
+            continue
+        p = Path(doc_path)
+        if p.suffix.lower() in SUPPORTED_EXTENSIONS and p.exists():
+            files.append(p)
+            seen.add(doc_path)
+
+    return sorted(files)
+
+
 # ── Main ──────────────────────────────────────────────────────────────────
 
 def main():
@@ -374,6 +406,14 @@ def main():
         "--no-viz", dest="viz", action="store_false",
         help="Skip visualization generation",
     )
+    parser.add_argument(
+        "--workers", type=int, default=1,
+        help="Number of concurrent threads for API calls (default: 1)",
+    )
+    parser.add_argument(
+        "--cluster-csv", metavar="CSV", default=None,
+        help="Cluster CSV — only process documents listed here (singletons dropped).",
+    )
 
     args = parser.parse_args()
 
@@ -391,23 +431,34 @@ def main():
         print(f"ERROR: '{folder}' is not a directory.", file=sys.stderr)
         sys.exit(1)
 
-    files = discover_files(folder)
+    # ── Determine file list ───────────────────────────────────────────────
+    if args.cluster_csv:
+        csv_path = Path(args.cluster_csv)
+        if not csv_path.exists():
+            print(f"ERROR: CSV not found: {csv_path}", file=sys.stderr)
+            sys.exit(1)
+        files = _load_cluster_file_list(csv_path)
+        print(f"Cluster CSV: {len(files)} documents (singletons dropped)", file=sys.stderr)
+    else:
+        files = discover_files(folder)
+
     if args.max_docs:
         files = files[:args.max_docs]
 
     total = len(files)
-    print(f"Found {total} documents in '{folder}'", file=sys.stderr)
+    print(f"Processing {total} documents from '{folder}'", file=sys.stderr)
 
     examples = _build_examples()
-    results = []
-    annotated_docs = []
-    errors = []
+    results: list[dict] = []
+    annotated_docs: list[tuple] = []
+    errors: list[dict] = []
     total_input_chars = 0
     total_output_chars = 0
 
     # Monkey-patch the Gemini provider to capture real token usage from
     # the API response's usage_metadata attribute.
     _token_counts = {"prompt": 0, "candidates": 0, "total": 0, "calls": 0}
+    _tc_lock = threading.Lock()
 
     try:
         from langextract.providers import gemini as _gemini_mod
@@ -431,10 +482,12 @@ def main():
 
                 um = getattr(response, "usage_metadata", None)
                 if um:
-                    _token_counts["prompt"] += getattr(um, "prompt_token_count", 0) or 0
-                    _token_counts["candidates"] += getattr(um, "candidates_token_count", 0) or 0
-                    _token_counts["total"] += getattr(um, "total_token_count", 0) or 0
-                _token_counts["calls"] += 1
+                    with _tc_lock:
+                        _token_counts["prompt"] += getattr(um, "prompt_token_count", 0) or 0
+                        _token_counts["candidates"] += getattr(um, "candidates_token_count", 0) or 0
+                        _token_counts["total"] += getattr(um, "total_token_count", 0) or 0
+                with _tc_lock:
+                    _token_counts["calls"] += 1
 
                 return core_types.ScoredOutput(score=1.0, output=response.text)
             except Exception as e:
@@ -447,25 +500,18 @@ def main():
     except Exception:
         _patched = False
 
-    try:
-        from tqdm import tqdm
-        file_iter = tqdm(files, desc="LangExtract", unit="doc")
-    except ImportError:
-        file_iter = files
-
-    for i, fpath in enumerate(file_iter):
-        rel = fpath.name
-        if not hasattr(file_iter, "set_description"):
-            print(f"  [{i+1}/{total}] {rel}", file=sys.stderr)
-
+    # ── Worker function for one document ──────────────────────────────────
+    def _process_one(fpath: Path) -> dict:
         text = load_text(fpath)
         if len(text) < 100:
-            results.append({
+            return {
                 "file_path": str(fpath),
                 "skipped": True,
                 "skip_reason": "too_little_text",
-            })
-            continue
+                "_ann_doc": None,
+                "_input_chars": 0,
+                "_output_chars": 0,
+            }
 
         try:
             ann = extract_single(
@@ -475,39 +521,86 @@ def main():
                 examples=examples,
             )
 
-            if isinstance(ann, list):
-                ann_doc = ann[0] if ann else None
-            else:
-                ann_doc = ann
+            ann_doc = ann[0] if isinstance(ann, list) and ann else ann if not isinstance(ann, list) else None
 
             if ann_doc is None:
-                results.append({
+                return {
                     "file_path": str(fpath),
                     "skipped": True,
                     "skip_reason": "no_extraction_result",
-                })
-                continue
+                    "_ann_doc": None,
+                    "_input_chars": 0,
+                    "_output_chars": 0,
+                }
 
             record = _annotated_to_dict(ann_doc, str(fpath))
-            results.append(record)
-            annotated_docs.append((ann_doc, str(fpath)))
-
-            total_input_chars += len(text)
-            out_chars = sum(
-                len(e.extraction_text or "")
-                for e in ann_doc.extractions
-            )
-            total_output_chars += out_chars
+            out_chars = sum(len(e.extraction_text or "") for e in ann_doc.extractions)
+            record["_ann_doc"] = ann_doc
+            record["_input_chars"] = len(text)
+            record["_output_chars"] = out_chars
+            return record
 
         except Exception as e:
             err_msg = f"{type(e).__name__}: {e}"
-            print(f"  [ERROR] {rel}: {err_msg}", file=sys.stderr)
-            errors.append({"file": str(fpath), "error": err_msg})
-            results.append({
+            return {
                 "file_path": str(fpath),
                 "skipped": True,
                 "skip_reason": f"error: {err_msg}",
-            })
+                "_ann_doc": None,
+                "_input_chars": 0,
+                "_output_chars": 0,
+                "_error": err_msg,
+            }
+
+    # ── Execute with thread pool ──────────────────────────────────────────
+    n_workers = max(1, args.workers)
+
+    from tqdm import tqdm
+    pbar = tqdm(total=total, desc="LangExtract", unit="doc")
+
+    if n_workers == 1:
+        for fpath in files:
+            record = _process_one(fpath)
+            ann_doc = record.pop("_ann_doc", None)
+            input_c = record.pop("_input_chars", 0)
+            output_c = record.pop("_output_chars", 0)
+            err_msg = record.pop("_error", None)
+
+            results.append(record)
+            if ann_doc:
+                annotated_docs.append((ann_doc, str(fpath)))
+                total_input_chars += input_c
+                total_output_chars += output_c
+            if err_msg:
+                errors.append({"file": str(fpath), "error": err_msg})
+                print(f"  [ERROR] {fpath.name}: {err_msg}", file=sys.stderr)
+            pbar.update(1)
+    else:
+        futures = {}
+        with ThreadPoolExecutor(max_workers=n_workers) as executor:
+            for fpath in files:
+                fut = executor.submit(_process_one, fpath)
+                futures[fut] = fpath
+
+            for fut in as_completed(futures):
+                fpath = futures[fut]
+                record = fut.result()
+                ann_doc = record.pop("_ann_doc", None)
+                input_c = record.pop("_input_chars", 0)
+                output_c = record.pop("_output_chars", 0)
+                err_msg = record.pop("_error", None)
+
+                results.append(record)
+                if ann_doc:
+                    annotated_docs.append((ann_doc, str(fpath)))
+                    total_input_chars += input_c
+                    total_output_chars += output_c
+                if err_msg:
+                    errors.append({"file": str(fpath), "error": err_msg})
+                    print(f"  [ERROR] {fpath.name}: {err_msg}", file=sys.stderr)
+                pbar.update(1)
+
+    pbar.close()
 
     # Restore original method if patched
     if _patched:

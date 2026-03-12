@@ -252,12 +252,30 @@ DOCTYPE_RULES: dict[str, list[str]] = {
                                        r"\bTHE\s+STATE\s+OF\s+TEXAS\b.{0,60}\bCITATION\b"],
     "Proof of Service":               [r"\bPROOF\s+OF\s+SERVICE\b"],
     "Certificate of Service":         [r"\bCERTIFICATE\s+OF\s+SERVICE\b"],
-    "Cover Letter":                   [r"\bCOVER\s+LETTER\b", r"\bTRANSMITTAL\s+LETTER\b"],
-    "Demand Letter":                  [r"\bDEMAND\s+LETTER\b", r"\bNOTICE\s+AND\s+DEMAND\b"],
+    "Cover Letter":                   [r"\bCOVER\s+LETTER\b", r"\bTRANSMITTAL\s+LETTER\b",
+                                       r"\bCOURTESY\s+COPIES?\b"],
+    "Demand Letter":                  [r"\bDEMAND\s+LETTER\b", r"\bNOTICE\s+AND\s+DEMAND\b",
+                                       r"\bDEMAND\s+FOR\s+CORRECTIVE\s+ACTION\b",
+                                       r"\bPRELIMINARY\s+NOTICE\s+AND\s+DEMAND\b"],
+    "Letter Brief":                   [r"\bLETTER\s+BRIEF\b",
+                                       r"\bLETTER\b.{0,20}\bIN\s+(?:SUPPORT|OPPOSITION|RESPONSE|REPLY)\b"],
+    "Letter Motion":                  [r"\bLETTER\s+MOTION\b",
+                                       r"\bCONSENT\s+LETTER\s+MOTION\b",
+                                       r"\bLETTER\s+(?:REQUEST|APPLICATION)\b"],
+    "Letter to Court":                [r"\bLETTER\s+TO\s+(?:THE\s+)?(?:COURT|JUDGE)\b",
+                                       r"\bDEAR\s+(?:JUDGE|HON(?:ORABLE)?\.?|MAGISTRATE|JUSTICE)\b",
+                                       r"\bDEAR\s+(?:HONORABLE\s+)?[A-Z][a-z]+\s*:"],
     "Civil Cover Sheet":              [r"\bCIVIL\s+COVER\s+SHEET\b"],
     "Letter":                         [r"\bLETTER\s+BRIEF\b",
                                        r"\bLETTER\s+TO\s+(?:THE\s+)?(?:COURT|JUDGE)\b",
-                                       r"\bDEAR\s+(?:JUDGE|HON(?:ORABLE)?\.?|MAGISTRATE|JUSTICE)\b"],
+                                       r"\bDEAR\s+(?:JUDGE|HON(?:ORABLE)?\.?|MAGISTRATE|JUSTICE)\b",
+                                       r"\bLETTER\s+MOTION\b",
+                                       r"\bCONSENT\s+LETTER\b",
+                                       r"\bCOVER\s+LETTER\b",
+                                       r"\bTRANSMITTAL\s+LETTER\b",
+                                       r"\bDEMAND\s+LETTER\b",
+                                       r"\bTO\s+WHOM\s+IT\s+MAY\s+CONCERN\b",
+                                       r"\bVIA\s+(?:CERTIFIED\s+MAIL|UPS|FEDEX|OVERNIGHT|ECF|ELECTRONIC)\b"],
     "Pro Hac Vice Motion":            [r"\bPRO\s+HAC\s+VICE\b",
                                        r"\bAPPEAR\s+PHV\b",
                                        r"\bADMISSION\s+PRO\s+HAC\b"],
@@ -500,7 +518,7 @@ CANONICAL_CLAUSE_HEADINGS: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# Texas citation boilerplate detection
+# Citation / service-of-process boilerplate detection
 # ---------------------------------------------------------------------------
 # When a document matches this pattern on its first page, it is a citation /
 # service-of-process form.  The boilerplate text (answer, petition, judgment)

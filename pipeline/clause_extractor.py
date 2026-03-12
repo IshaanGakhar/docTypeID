@@ -1,15 +1,18 @@
 """
-Constitutional clause / provision citation detector.
+Legal citation and clause detector.
 
-Scans document text for references to US Constitutional provisions:
-  - Amendments (First through Twenty-Seventh, ordinal and roman numeral forms)
-  - Named clauses (Due Process, Commerce, Equal Protection, etc.)
-  - Article / Section citations (Art. I § 8, Article II Section 2, etc.)
+Scans document text for references to:
+  - US Constitutional provisions (amendments, named clauses, article/section)
+  - Federal statutes (U.S.C. §, named acts like RICO, ERISA, TCPA)
+  - Federal rules (FRCP, FRE, FRAP, local rules)
+  - State statutes (state code § citations)
+  - Code of Federal Regulations (C.F.R.)
+  - Case law citations (reporter-based, e.g. "556 U.S. 662")
 
 Each hit is deduplicated by canonical name and returned with a short
 context snippet showing where in the document it was cited.  The result
-list is intended as a "constitutional fingerprint" for a legal document —
-useful when drafting similar filings.
+list is intended as a "legal fingerprint" for a document — useful when
+drafting similar filings.
 """
 
 from __future__ import annotations
@@ -38,6 +41,9 @@ class ClauseEvidence:
 @dataclass
 class ClauseItem:
     clause_type: str          # "amendment" | "named_clause" | "article_section"
+                              # | "federal_statute" | "state_statute"
+                              # | "federal_rule" | "case_citation"
+                              # | "named_act" | "cfr"
     heading: str              # canonical provision name
     text: str                 # context sentence(s) where it was found
     page_start: int
@@ -235,6 +241,226 @@ _ROMAN_TO_INT = {v: k for k, v in _ROMAN.items()}  # not used but kept for clari
 
 
 # ---------------------------------------------------------------------------
+# Federal statute patterns  (Option A)
+# ---------------------------------------------------------------------------
+
+# § character: U+00A7.  PDFs sometimes render it as "Sec." or "Section".
+_SEC = r"(?:§§?\s*|(?:Sec(?:tion)?\.?\s*))"
+
+# Title N of the United States Code: "15 U.S.C. § 78j(b)", "42 U.S.C. §§ 1983, 1988"
+_USC_RE = re.compile(
+    r"\b(\d{1,2})\s+U\.?\s*S\.?\s*C\.?\s*"
+    + _SEC
+    + r"(\d[\w\-\.]*(?:\([a-zA-Z0-9]+\))*)"
+    r"(?:\s*(?:,|and|&)\s*(\d[\w\-\.]*(?:\([a-zA-Z0-9]+\))*))?",
+    re.IGNORECASE,
+)
+
+# Code of Federal Regulations: "17 C.F.R. § 240.10b-5"
+_CFR_RE = re.compile(
+    r"\b(\d{1,2})\s+C\.?\s*F\.?\s*R\.?\s*"
+    + _SEC
+    + r"(\d[\w\-\.]*(?:\([a-zA-Z0-9]+\))*)",
+    re.IGNORECASE,
+)
+
+# Bare § with a title number preceding: "§ 1983", "§§ 10(b) and 20(a)"
+# Only match when the preceding context looks statutory (title number or
+# code name within 50 chars).
+_BARE_SECTION_RE = re.compile(
+    r"§§?\s*(\d[\w\-\.]*(?:\([a-zA-Z0-9]+\))*)",
+)
+
+# ---------------------------------------------------------------------------
+# State statute patterns
+# ---------------------------------------------------------------------------
+
+# Generalized state code pattern:
+#   [State abbrev / name] [Code name] § NNN
+#   e.g. "Tex. Civ. Prac. & Rem. Code § 27.001"
+#        "Cal. Code Civ. Proc. § 425.16"
+#        "N.Y. Bus. Corp. Law § 720"
+#        "Del. Code Ann. tit. 8, § 220"
+_STATE_CODE_RE = re.compile(
+    r"\b("
+    # 2-4 letter state abbreviations with periods
+    r"(?:[A-Z][a-z]{0,3}\.)\s+"
+    # Code name: 1-6 words (letters, periods, ampersands)
+    r"(?:[A-Z][A-Za-z&\.\']+\s+){0,5}"
+    r"(?:Code|Law|Stat(?:utes)?|Ann(?:otated)?|Rev(?:ised)?|Gen(?:eral)?|Acts?)"
+    r"(?:\s+(?:Ann(?:otated)?|Rev(?:ised)?|tit\.\s*\d+))?"
+    r")"
+    r"\s*(?:,\s*)?"
+    + _SEC
+    + r"(\d[\w\-\.]*(?:\([a-zA-Z0-9]+\))*)",
+    re.IGNORECASE,
+)
+
+# ---------------------------------------------------------------------------
+# Federal Rules patterns
+# ---------------------------------------------------------------------------
+
+_FEDERAL_RULES: list[tuple[str, re.Pattern]] = [
+    ("Fed. R. Civ. P.", re.compile(
+        r"\bFed(?:eral)?\.?\s*R(?:ule)?\.?\s*(?:of\s+)?Civ(?:il)?\.?\s*P(?:roc(?:edure)?)?\.?"
+        r"\s*(\d{1,3})"
+        r"(?:\s*\(\s*([a-zA-Z0-9]+)\s*\))?",
+        re.IGNORECASE,
+    )),
+    ("Fed. R. Evid.", re.compile(
+        r"\bFed(?:eral)?\.?\s*R(?:ule)?\.?\s*(?:of\s+)?Evid(?:ence)?\.?"
+        r"\s*(\d{1,4})",
+        re.IGNORECASE,
+    )),
+    ("Fed. R. App. P.", re.compile(
+        r"\bFed(?:eral)?\.?\s*R(?:ule)?\.?\s*(?:of\s+)?App(?:ellate)?\.?\s*P(?:roc(?:edure)?)?\.?"
+        r"\s*(\d{1,3})",
+        re.IGNORECASE,
+    )),
+    ("Fed. R. Bankr. P.", re.compile(
+        r"\bFed(?:eral)?\.?\s*R(?:ule)?\.?\s*(?:of\s+)?Bankr(?:uptcy)?\.?\s*P(?:roc(?:edure)?)?\.?"
+        r"\s*(\d{1,4})",
+        re.IGNORECASE,
+    )),
+]
+
+# "Rule 12(b)(6)", "Rule 23", "Rule 56" — bare rule references
+# Only match when "Rule" is capitalized (avoids "golden rule", etc.)
+_BARE_RULE_RE = re.compile(
+    r"\bRule\s+(\d{1,3})"
+    r"((?:\s*\(\s*[a-zA-Z0-9]+\s*\))+)?",
+)
+
+# Local Rules: "Local Rule 7.1", "L.R. 56.1", "Local Civ. R. 7.1"
+_LOCAL_RULE_RE = re.compile(
+    r"\b(?:Local\s+(?:Civ(?:il)?\.?\s*)?(?:Rule|R\.)|L\.?\s*(?:Civ\.?\s*)?R\.)"
+    r"\s*(\d[\w\.\-]*)",
+    re.IGNORECASE,
+)
+
+# ---------------------------------------------------------------------------
+# Named federal statutes / acts
+# ---------------------------------------------------------------------------
+
+_NAMED_ACTS: list[tuple[str, re.Pattern]] = [
+    ("Securities Exchange Act of 1934", re.compile(
+        r"\bSecurities\s+Exchange\s+Act(?:\s+of\s+1934)?\b", re.IGNORECASE)),
+    ("Securities Act of 1933", re.compile(
+        r"\bSecurities\s+Act(?:\s+of\s+1933)?\b", re.IGNORECASE)),
+    ("Private Securities Litigation Reform Act", re.compile(
+        r"\bP(?:rivate\s+)?S(?:ecurities\s+)?L(?:itigation\s+)?R(?:eform\s+)?A(?:ct)?\b"
+        r"|PSLRA\b", re.IGNORECASE)),
+    ("Sarbanes-Oxley Act", re.compile(
+        r"\bSarbanes[- ]Oxley(?:\s+Act)?\b|SOX\b", re.IGNORECASE)),
+    ("Dodd-Frank Act", re.compile(
+        r"\bDodd[- ]Frank(?:\s+(?:Wall\s+Street\s+Reform\s+and\s+Consumer\s+Protection\s+)?Act)?\b",
+        re.IGNORECASE)),
+    ("RICO", re.compile(
+        r"\bRICO\b|\bRacketeer\s+Influenced\s+and\s+Corrupt\s+Organizations?\b",
+        re.IGNORECASE)),
+    ("ERISA", re.compile(
+        r"\bERISA\b|\bEmployee\s+Retirement\s+Income\s+Security\s+Act\b",
+        re.IGNORECASE)),
+    ("TCPA (Texas Citizens Participation Act)", re.compile(
+        r"\bTexas\s+Citizens?\s+Participation\s+Act\b|"
+        r"\bTex(?:as)?\.?\s+Civ(?:il)?\.?\s+Prac(?:tice)?\.?\s+(?:&|and)\s+Rem(?:edies)?\.?\s+Code\s+"
+        + _SEC + r"27\b",
+        re.IGNORECASE)),
+    ("TCPA (Telephone Consumer Protection Act)", re.compile(
+        r"\bTelephone\s+Consumer\s+Protection\s+Act\b", re.IGNORECASE)),
+    ("FLSA", re.compile(
+        r"\bFLSA\b|\bFair\s+Labor\s+Standards\s+Act\b", re.IGNORECASE)),
+    ("FMLA", re.compile(
+        r"\bFMLA\b|\bFamily\s+(?:and\s+)?Medical\s+Leave\s+Act\b", re.IGNORECASE)),
+    ("ADA", re.compile(
+        r"\bAmericans?\s+with\s+Disabilities\s+Act\b|\bADA\b", re.IGNORECASE)),
+    ("Title VII", re.compile(
+        r"\bTitle\s+VII(?:\s+of\s+the\s+Civil\s+Rights\s+Act)?\b", re.IGNORECASE)),
+    ("Section 1983", re.compile(
+        r"\b(?:Section|§)\s*1983\b|\b42\s+U\.?S\.?C\.?\s*§?\s*1983\b",
+        re.IGNORECASE)),
+    ("Lanham Act", re.compile(
+        r"\bLanham\s+Act\b", re.IGNORECASE)),
+    ("Sherman Act", re.compile(
+        r"\bSherman\s+(?:Anti[- ]?Trust\s+)?Act\b", re.IGNORECASE)),
+    ("Clayton Act", re.compile(
+        r"\bClayton\s+Act\b", re.IGNORECASE)),
+    ("CERCLA", re.compile(
+        r"\bCERCLA\b|\bComprehensive\s+Environmental\s+Response", re.IGNORECASE)),
+    ("Clean Air Act", re.compile(
+        r"\bClean\s+Air\s+Act\b", re.IGNORECASE)),
+    ("Clean Water Act", re.compile(
+        r"\bClean\s+Water\s+Act\b", re.IGNORECASE)),
+    ("NEPA", re.compile(
+        r"\bNEPA\b|\bNational\s+Environmental\s+Policy\s+Act\b", re.IGNORECASE)),
+    ("FOIA", re.compile(
+        r"\bFOIA\b|\bFreedom\s+of\s+Information\s+Act\b", re.IGNORECASE)),
+    ("Bankruptcy Code", re.compile(
+        r"\bBankruptcy\s+Code\b|\b11\s+U\.?S\.?C\.?\s*§", re.IGNORECASE)),
+    ("Federal Arbitration Act", re.compile(
+        r"\bFederal\s+Arbitration\s+Act\b|\bFAA\b", re.IGNORECASE)),
+    ("Hatch-Waxman Act", re.compile(
+        r"\bHatch[- ]Waxman\s+Act\b", re.IGNORECASE)),
+    ("Patent Act", re.compile(
+        r"\bPatent\s+Act\b|\b35\s+U\.?S\.?C\.?\s*§", re.IGNORECASE)),
+    ("Copyright Act", re.compile(
+        r"\bCopyright\s+Act\b|\b17\s+U\.?S\.?C\.?\s*§", re.IGNORECASE)),
+    ("Uniform Commercial Code", re.compile(
+        r"\bU\.?\s*C\.?\s*C\.?\s*" + _SEC + r"\d|"
+        r"\bUniform\s+Commercial\s+Code\b", re.IGNORECASE)),
+    ("Class Action Fairness Act", re.compile(
+        r"\bClass\s+Action\s+Fairness\s+Act\b|\bCAFA\b", re.IGNORECASE)),
+    ("Federal Tort Claims Act", re.compile(
+        r"\bFederal\s+Tort\s+Claims?\s+Act\b|\bFTCA\b", re.IGNORECASE)),
+    ("Voting Rights Act", re.compile(
+        r"\bVoting\s+Rights\s+Act\b", re.IGNORECASE)),
+    ("Civil Rights Act", re.compile(
+        r"\bCivil\s+Rights\s+Act(?:\s+of\s+\d{4})?\b", re.IGNORECASE)),
+    ("Hobbs Act", re.compile(
+        r"\bHobbs\s+Act\b", re.IGNORECASE)),
+    ("Wire Fraud Statute", re.compile(
+        r"\b(?:wire|mail)\s+fraud\s+statute\b|\b18\s+U\.?S\.?C\.?\s*§?\s*1343\b",
+        re.IGNORECASE)),
+]
+
+# ---------------------------------------------------------------------------
+# Case law citation patterns  (Option B)
+# ---------------------------------------------------------------------------
+
+# Federal reporters (ordered longest-first to avoid partial matches)
+_REPORTERS = (
+    r"F\.\s*Supp\.\s*3d|F\.\s*Supp\.\s*2d|F\.\s*Supp\.|"
+    r"F\.\s*(?:App(?:'x|x)?\.?\s*)?4th|F\.\s*3d|F\.\s*2d|"
+    r"S\.\s*Ct\.|L\.\s*Ed\.\s*2d|"
+    r"U\.S\.|"
+    # State reporters (common)
+    r"Cal\.\s*(?:App\.\s*)?(?:5th|4th|3d|2d)|Cal\.\s*Rptr\.\s*(?:3d|2d)?|"
+    r"N\.Y\.\s*(?:3d|2d)|A\.D\.\s*(?:3d|2d)|"
+    r"So\.\s*(?:3d|2d)|"
+    r"N\.(?:E|W)\.\s*(?:3d|2d)|"
+    r"A\.\s*(?:3d|2d)|"
+    r"P\.\s*(?:3d|2d)|"
+    r"S\.(?:E|W)\.\s*(?:2d|3d)"
+)
+
+# Full case citation: "[Volume] [Reporter] [Page]"
+# Optionally preceded by a case name: "Iqbal v. Ashcroft, 556 U.S. 662 (2009)"
+_CASE_CITE_RE = re.compile(
+    r"\b(\d{1,4})\s+(" + _REPORTERS + r")\s+(\d{1,5})"
+    r"(?:\s*,\s*(\d{1,5}))?"       # optional pinpoint page
+    r"(?:\s*\([^)]{2,40}\))?"      # optional parenthetical "(S.D.N.Y. 2020)"
+)
+
+# Case name extraction: look backward from the citation for "Name v. Name"
+_CASE_NAME_RE = re.compile(
+    r"((?:[A-Z][A-Za-z\.\'\u2019]+(?:\s+(?:of|the|and|&|in|ex\s+rel\.?|for|de|del|van|von)\s+)?)+)"
+    r"\s+v\.?\s+"
+    r"((?:[A-Z][A-Za-z\.\'\u2019]+(?:\s+(?:of|the|and|&|in|for|de|del|van|von)\s+)?)+)"
+    r"\s*,?\s*$"
+)
+
+
+# ---------------------------------------------------------------------------
 # Context extraction helpers
 # ---------------------------------------------------------------------------
 
@@ -272,7 +498,7 @@ def _scan_text(
     line_index: list[IndexedLine],
 ) -> list[ClauseItem]:
     """
-    Scan `full_text` for all constitutional citations.
+    Scan `full_text` for all legal citations.
     Returns a list of ClauseItems, deduplicated by canonical heading.
     """
     seen: dict[str, ClauseItem] = {}   # canonical name → first hit
@@ -288,7 +514,7 @@ def _scan_text(
             span_text=m.group(0),
             char_start=m.start(),
             char_end=m.end(),
-            rule_id=f"const_cite:{ctype}",
+            rule_id=f"cite:{ctype}",
         )
         seen[canon] = ClauseItem(
             clause_type=ctype,
@@ -298,6 +524,8 @@ def _scan_text(
             page_end=page,
             evidence=[ev],
         )
+
+    # ── Constitutional citations ──────────────────────────────────────────
 
     # 1. Named clauses
     for canon, ctype, pat in _NAMED_COMPILED:
@@ -339,7 +567,6 @@ def _scan_text(
     for m in _BARE_ARTICLE_RE.finditer(full_text):
         roman = m.group(1).upper()
         sec   = m.group(2)
-        # Check within 300 chars on either side for constitutional context
         window_start = max(0, m.start() - 300)
         window_end   = min(len(full_text), m.end() + 300)
         window       = full_text[window_start:window_end]
@@ -347,6 +574,94 @@ def _scan_text(
             continue
         canon = f"Article {roman}" + (f", Section {sec}" if sec else "")
         _add(canon, "article_section", m)
+
+    # ── Federal statutes (U.S.C.) ─────────────────────────────────────────
+
+    for m in _USC_RE.finditer(full_text):
+        title = m.group(1)
+        sec   = m.group(2)
+        canon = f"{title} U.S.C. § {sec}"
+        _add(canon, "federal_statute", m)
+        sec2 = m.group(3)
+        if sec2:
+            canon2 = f"{title} U.S.C. § {sec2}"
+            _add(canon2, "federal_statute", m)
+
+    # ── C.F.R. ────────────────────────────────────────────────────────────
+
+    for m in _CFR_RE.finditer(full_text):
+        title = m.group(1)
+        sec   = m.group(2)
+        canon = f"{title} C.F.R. § {sec}"
+        _add(canon, "cfr", m)
+
+    # ── State statutes ────────────────────────────────────────────────────
+
+    for m in _STATE_CODE_RE.finditer(full_text):
+        code_name = re.sub(r"\s+", " ", m.group(1)).strip()
+        sec = m.group(2)
+        canon = f"{code_name} § {sec}"
+        _add(canon, "state_statute", m)
+
+    # ── Federal Rules ─────────────────────────────────────────────────────
+
+    for rule_prefix, pat in _FEDERAL_RULES:
+        for m in pat.finditer(full_text):
+            num  = m.group(1)
+            sub  = m.group(2) if m.lastindex >= 2 and m.group(2) else ""
+            canon = f"{rule_prefix} {num}{sub}"
+            _add(canon, "federal_rule", m)
+
+    # Bare "Rule NN" — only accept in documents that already have other
+    # federal rule or U.S.C. citations (avoids false positives from
+    # non-legal "Rule" references)
+    has_federal_context = any(
+        c.clause_type in ("federal_rule", "federal_statute")
+        for c in seen.values()
+    )
+    if has_federal_context:
+        for m in _BARE_RULE_RE.finditer(full_text):
+            num = m.group(1)
+            sub = m.group(2) or ""
+            sub = re.sub(r"\s+", "", sub)
+            canon = f"Rule {num}{sub}"
+            _add(canon, "federal_rule", m)
+
+    for m in _LOCAL_RULE_RE.finditer(full_text):
+        num = m.group(1)
+        canon = f"Local Rule {num}"
+        _add(canon, "federal_rule", m)
+
+    # ── Named federal statutes / acts ─────────────────────────────────────
+
+    for act_name, pat in _NAMED_ACTS:
+        for m in pat.finditer(full_text):
+            _add(act_name, "named_act", m)
+            break  # one match per act is enough
+
+    # ── Case law citations ────────────────────────────────────────────────
+
+    for m in _CASE_CITE_RE.finditer(full_text):
+        vol      = m.group(1)
+        reporter = re.sub(r"\s+", " ", m.group(2)).strip()
+        page     = m.group(3)
+
+        # Try to extract case name from the text preceding the citation
+        pre_start = max(0, m.start() - 150)
+        pre_text  = full_text[pre_start:m.start()].rstrip(", \t")
+        case_name = None
+        name_m = _CASE_NAME_RE.search(pre_text)
+        if name_m:
+            p1 = name_m.group(1).strip()
+            p2 = name_m.group(2).strip()
+            case_name = f"{p1} v. {p2}"
+
+        if case_name:
+            canon = f"{case_name}, {vol} {reporter} {page}"
+        else:
+            canon = f"{vol} {reporter} {page}"
+
+        _add(canon, "case_citation", m)
 
     # Sort by first appearance (char_start of first evidence)
     return sorted(seen.values(), key=lambda c: c.evidence[0].char_start)
@@ -358,11 +673,12 @@ def _scan_text(
 
 def extract_clauses(zones: DocumentZones) -> ClauseResult:
     """
-    Detect US Constitutional citations in the document.
+    Detect legal citations in the document.
 
     Returns a ClauseResult whose `clauses` list is the deduplicated set of
-    constitutional provisions (amendments, named clauses, article-section
-    references) cited anywhere in the document, each with a context snippet.
+    legal citations (constitutional provisions, federal/state statutes,
+    federal rules, named acts, case law) found anywhere in the document,
+    each with a context snippet.
     """
     # Build a flat text and a parallel line index for page-number lookup
     all_lines: list[IndexedLine] = (

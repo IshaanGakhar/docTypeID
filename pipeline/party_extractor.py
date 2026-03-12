@@ -82,14 +82,14 @@ _COURT_CAPTION_IN_PARTY = re.compile(
     r"""
     \[PROPOSED\]
     | \bORDER\b.*\bCOURT\b | \bCOURT\b.*\bORDER\b
-    | ^CAUSE\s+NO\.                          # Texas state court docket line
-    | ^FORM\s+NO\.                           # Texas citation form header
+    | ^CAUSE\s+NO\.                          # State court docket line
+    | ^FORM\s+NO\.                           # Citation / court form header
     | ^[A-Z]{1,4}\s+\d+                      # Federal court form numbers (AO 440, JS 44, etc.)
     | \(Rev\.                                # Form revision markers "(Rev. 06/12)"
     | \bSummons\s+in\s+a\s+Civil\s+Action\b  # AO 440 form title
     | \bCivil\s+Cover\s+Sheet\b              # JS 44 form title
-    | \b(?:HOUSTON|DALLAS|SAN\s+ANTONIO|AUSTIN|EL\s+PASO|FORT\s+WORTH)\s+DIVISION\b
-                                             # Texas federal/state district divisions
+    | \b[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?\s+DIVISION\b
+                                             # Court divisions (e.g. "HOUSTON DIVISION", "CENTRAL DIVISION")
     """,
     re.IGNORECASE | re.VERBOSE | re.MULTILINE,
 )
@@ -130,8 +130,7 @@ _BARE_CONJUNCTION = frozenset({"AND", "OR", "THE", "A", "AN", "IN", "OF", "FOR",
 
 _LEGAL_SUFFIX_ONLY = re.compile(
     r"^(?:INC\.?|LLC|LLP|CORP\.?|CO\.?|PLC|LP|LTD\.?|B\.V\.?|N\.A\.?|S\.A\.?|"
-    r"GMBH|INCORPORATED|CORPORATION|COMPANY|LIMITED|P\.?C\.?|"
-    r"PIERCE|FENNER)\s*[,.\s]*$",
+    r"GMBH|INCORPORATED|CORPORATION|COMPANY|LIMITED|P\.?C\.?)\s*[,.\s]*$",
     re.IGNORECASE,
 )
 
